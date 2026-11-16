@@ -54,6 +54,7 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
   const touchControls = document.querySelector('#touch-controls');
   const announcement = document.querySelector('#announcement');
   const flashlight = document.querySelector('#flashlight');
+  const sneak = document.querySelector('#sneak');
   const batteryMeter = document.querySelector('#battery-meter');
   const batteryFill = document.querySelector('#battery-fill');
   const batteryValue = document.querySelector('#battery-value');
@@ -84,6 +85,7 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
     signal: events.signal,
   });
   mute.addEventListener('click', () => onAction('toggleMute'), { signal: events.signal });
+  bindActionButton(sneak, () => onAction('toggleSneak'), { signal: events.signal });
   bindActionButton(flashlight, () => onAction('toggleLight'), { signal: events.signal });
   let lastPhase;
   let lastKey;
@@ -140,7 +142,7 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
             ? 'Левый джойстик — движение, правый — свет. Направление света сохраняется после отпускания.'
             : 'Левый джойстик — движение и направление света. После остановки направление сохраняется.';
         document.querySelector('#control-instructions').textContent =
-          text + ' Круглая кнопка включает и выключает фонарь. Пауза — кнопка вверху.';
+          text + ' Круглая кнопка — фонарь. «Тихий шаг» уменьшает скорость и шум. Пауза — вверху.';
         document.querySelector('#controls-hint').textContent = text;
       }
     },
@@ -163,7 +165,15 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
     },
     render(
       state,
-      { nearLockedExit = false, threat = false, lightHit = false, warning = false } = {},
+      {
+        nearLockedExit = false,
+        threat = false,
+        lightHit = false,
+        warning = false,
+        sneaking = false,
+        parasiteWarning = false,
+        noiseAlarm = false,
+      } = {},
     ) {
       const playing = state.phase === 'playing';
       if (state.streak !== lastStreak) {
@@ -171,6 +181,8 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
         lastStreak = state.streak;
       }
       pause.hidden = !playing;
+      sneak.hidden = !playing;
+      sneak.setAttribute('aria-pressed', String(sneaking));
       flashlight.disabled = !playing || state.battery <= 0;
       const charge = Math.ceil(state.battery);
       if (charge !== lastBattery) {
@@ -184,12 +196,16 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
         flashlight.setAttribute('aria-pressed', String(state.lightOn));
         lastLight = state.lightOn;
       }
-      danger.hidden = !playing || !threat;
-      danger.textContent = warning
-        ? 'Ловчий готовит рывок — уйди в сторону'
-        : lightHit
-          ? 'Свет сдерживает преследователя'
-          : 'Вас преследуют';
+      danger.hidden = !playing || !(threat || parasiteWarning || noiseAlarm);
+      danger.textContent = parasiteWarning
+        ? 'Паразит высасывает заряд — выключите фонарь'
+        : noiseAlarm
+          ? 'Громила услышал шаги — смените позицию'
+          : warning
+            ? 'Ловчий готовит рывок — уйди в сторону'
+            : lightHit
+              ? 'Свет сдерживает преследователя'
+              : 'Вас преследуют';
       touchControls.hidden = !touch || !playing;
       document.querySelector('#scene').setAttribute('aria-hidden', String(!playing));
       const message =

@@ -1,4 +1,6 @@
 const SOUNDS = {
+  roar: [65, 180, 0.6, 0.07, 'sawtooth'],
+  parasite: [440, 65, 0.28, 0.045, 'sine'],
   step: [90, 45, 0.075, 0.025, 'triangle'],
   click: [200, 85, 0.055, 0.035, 'square'],
   key: [660, 990, 0.3, 0.065, 'sine'],
@@ -14,7 +16,9 @@ export function createAudio({
     muted = false,
     disposed = false,
     drone = null,
-    stepTimer = 0;
+    stepTimer = 0,
+    scrapeTimer = 0,
+    hissTimer = 0;
   const voices = new Set();
   function voice(frequency, endFrequency, duration, volume, type = 'sine') {
     if (disposed || muted || !context || context.state !== 'running' || voices.size >= 16)
@@ -57,7 +61,7 @@ export function createAudio({
   }
   function pause() {
     for (const node of [...voices]) node.stop();
-    stepTimer = 0;
+    stepTimer = scrapeTimer = hissTimer = 0;
   }
   return {
     async unlock() {
@@ -74,15 +78,41 @@ export function createAudio({
       const sound = SOUNDS[event];
       if (sound) voice(...sound);
     },
-    update(dt, { threat = false, walking = false } = {}) {
+    update(
+      dt,
+      {
+        threat = false,
+        walking = false,
+        sneaking = false,
+        scraping = false,
+        hissing = false,
+        noise = 1,
+      } = {},
+    ) {
       if (threat) {
         if (!drone) drone = voice(58, 58, null, 0.025, 'triangle');
       } else drone?.stop();
+      scrapeTimer -= dt;
+      hissTimer -= dt;
+      if (scraping && scrapeTimer <= 0) {
+        voice(78, 120, 0.19, 0.022, 'sawtooth');
+        scrapeTimer = 0.55;
+      }
+      if (hissing && hissTimer <= 0) {
+        voice(240, 500, 0.25, 0.015, 'triangle');
+        hissTimer = 0.8;
+      }
       stepTimer -= dt;
       if (walking && stepTimer <= 0) {
         const sound = SOUNDS.step;
-        voice(...sound);
-        stepTimer = 0.34;
+        voice(
+          sound[0],
+          sound[1],
+          sound[2],
+          sound[3] * (sneaking || noise <= 0.55 ? 0.25 : 1),
+          sound[4],
+        );
+        stepTimer = sneaking || noise <= 0.55 ? 0.55 : 0.34;
       }
       if (!walking) stepTimer = 0;
     },

@@ -1,4 +1,6 @@
 const MOVEMENT_CODES = new Set([
+  'ShiftLeft',
+  'ShiftRight',
   'KeyW',
   'KeyA',
   'KeyS',
@@ -28,7 +30,9 @@ export function createInputState() {
     pointerX: 0,
     pointerY: 0,
     mouseAim: false,
+    sneaking: false,
   };
+  let touchSneak = false;
   let stickX = 0;
   let stickZ = 0;
   let enabled = false;
@@ -36,6 +40,8 @@ export function createInputState() {
     manualAim = false;
   function reset({ aim = false } = {}) {
     keys.clear();
+    touchSneak = false;
+    state.sneaking = false;
     stickX = 0;
     stickZ = 0;
     state.moveX = 0;
@@ -50,6 +56,9 @@ export function createInputState() {
   return {
     get enabled() {
       return enabled;
+    },
+    toggleSneak() {
+      if (enabled) touchSneak = !touchSneak;
     },
     keyDown(code) {
       if (enabled && MOVEMENT_CODES.has(code)) keys.add(code);
@@ -93,6 +102,7 @@ export function createInputState() {
         Number(keys.has('KeyW') || keys.has('ArrowUp')) +
         stickZ;
       normalizeMovement(enabled ? x : 0, enabled ? z : 0, vector);
+      state.sneaking = enabled && (touchSneak || keys.has('ShiftLeft') || keys.has('ShiftRight'));
       state.moveX = vector.x;
       state.moveZ = vector.z;
       const length = Math.hypot(vector.x, vector.z);
@@ -212,6 +222,7 @@ export function createInput(
   }
   return {
     sample: model.sample,
+    toggleSneak: model.toggleSneak,
     reposition,
     setAimMode(mode) {
       model.setAimMode(mode);

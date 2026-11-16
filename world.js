@@ -1,7 +1,7 @@
 import { PLAYER, FLASHLIGHT } from './config.js';
 import { createEllipseCollider } from './collision.js';
 import { createEnemy } from './enemy.js';
-import { distancesFrom, cellPoint, cellIndex } from './navigation.js';
+import { distancesFrom, cellPoint, cellIndex, hasLineOfSight } from './navigation.js';
 
 export function createWorld(map) {
   const position = { ...map.spawns.player },
@@ -31,7 +31,7 @@ export function createWorld(map) {
     );
   });
   const collected = new Set();
-  const enemyWorld = { player: position, moving: false, lightOn: true, aim };
+  const enemyWorld = { player: position, moving: false, noise: 0, lightOn: true, aim };
   const frame = { key: false, exit: false, caught: false, battery: 0 };
   const feedback = {
     keyPicked: false,
@@ -43,7 +43,16 @@ export function createWorld(map) {
     warning: false,
     walking: false,
     nearLockedExit: false,
+    sneaking: false,
+    parasiteHit: false,
+    parasiteWarning: false,
+    roar: false,
+    scraping: false,
+    hissing: false,
+    noiseAlarm: false,
+    noise: 0,
   };
+  let parasiteWarning = 0;
   return {
     position,
     aim,
@@ -57,6 +66,7 @@ export function createWorld(map) {
       aim.x = 0;
       aim.z = -1;
       collected.clear();
+      parasiteWarning = 0;
       enemies.forEach((e) => e.reset());
     },
     step(dt, controls, game) {
@@ -68,6 +78,10 @@ export function createWorld(map) {
       feedback.threat = false;
       feedback.warning = false;
       feedback.walking = false;
+      feedback.parasiteHit = feedback.roar = feedback.scraping = feedback.sneaking = false;
+      feedback.parasiteWarning = false;
+      feedback.hissing = feedback.noiseAlarm = false;
+      feedback.noise = 0;
       if (game.state.phase !== 'playing') return feedback;
       dt = Math.min(0.05, Math.max(0, dt));
       const length = Math.hypot(controls.aimX, controls.aimZ);
@@ -77,21 +91,40 @@ export function createWorld(map) {
       }
       const oldX = position.x,
         oldZ = position.z;
-      delta.x = controls.moveX * PLAYER.speed * dt;
-      delta.z = controls.moveZ * PLAYER.speed * dt;
+      feedback.sneaking = !!controls.sneaking;
+      const moveScale = feedback.sneaking ? 0.4 : 1;
+      delta.x = controls.moveX * PLAYER.speed * dt * moveScale;
+      delta.z = controls.moveZ * PLAYER.speed * dt * moveScale;
       (game.state.hasKey ? collider : lockedCollider).move(position, delta);
       feedback.walking = Math.hypot(oldX - position.x, oldZ - position.z) > 0.0001;
       enemyWorld.moving = feedback.walking;
+      enemyWorld.noise =
+        dt > 0 ? Math.hypot(oldX - position.x, oldZ - position.z) / (PLAYER.speed * dt) : 0;
+      feedback.noise = enemyWorld.noise;
+      parasiteWarning = Math.max(0, parasiteWarning - dt);
       enemyWorld.lightOn = game.state.lightOn;
       frame.caught = false;
       for (const enemy of enemies) {
         enemy.update(dt, enemyWorld);
-        feedback.lightHit ||= enemy.illuminated;
+        feedback.lightHit ||= enemy.lightAffected;
+        feedback.roar ||= enemy.roared;
+        feedback.hissing ||= enemy.phase === 'repelled';
+        feedback.noiseAlarm ||= enemy.signal > 0;
+        feedback.scraping ||= enemy.type === 'mimic' && enemy.moving;
         feedback.threat ||= enemy.isThreat;
         feedback.warning ||= enemy.phase === 'windup';
-        frame.caught ||=
+        const contact =
           Math.hypot(position.x - enemy.position.x, position.z - enemy.position.z) <
           enemy.contactRadius;
+        if (contact && enemy.lethal) frame.caught = true;
+        if (contact && !enemy.lethal && hasLineOfSight(position, enemy.position, map)) {
+          const bite = enemy.tryBite(game.state.lightOn);
+          if (bite) {
+            game.drainBattery(bite);
+            feedback.parasiteHit = true;
+            parasiteWarning = 1.2;
+          }
+        }
       }
       const exitDistance = Math.hypot(position.x - exit.x, position.z - exit.z);
 
@@ -118,6 +151,7 @@ export function createWorld(map) {
       feedback.caught = frame.caught;
       feedback.completed = game.state.phase === 'floorComplete';
       feedback.nearLockedExit = exitDistance < 1.25;
+      feedback.parasiteWarning = parasiteWarning > 0;
       return feedback;
     },
   };

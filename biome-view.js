@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CELL_SIZE } from './map.js';
 import { createLevelArt } from './level-art.js';
+import { createArmorParts } from './stone-armor.js';
 
 export function createBiomeDecor(map, biome, art = createLevelArt(map)) {
   const root = new THREE.Group(),
@@ -284,6 +285,31 @@ export function createBiomeDecor(map, biome, art = createLevelArt(map)) {
       }
     }
   });
+  // Harmless armor shares the mimic silhouette, placed on solid north-wall supports.
+  const statues = rooms.filter((room, i) => i % 2 === 0);
+  const statueMaterial = material({ color: 0x656b70, roughness: 1 });
+  const groups = new Map();
+  for (const part of createArmorParts()) {
+    if (!groups.has(part.geometry)) groups.set(part.geometry, []);
+    groups.get(part.geometry).push(part);
+  }
+  for (const [geometry, parts] of groups) {
+    const mesh = batch(geometry, statueMaterial, statues.length * parts.length);
+    statues.forEach((room, i) =>
+      parts.forEach((part, j) => {
+        put(
+          mesh,
+          i * parts.length + j,
+          (room.originX + 1) * CELL_SIZE + part.x * 0.75,
+          1.56 + part.y * 0.75,
+          room.originZ * CELL_SIZE + part.z * 0.75,
+          part.sx * 0.75,
+          part.sy * 0.75,
+          part.sz * 0.75,
+        );
+      }),
+    );
+  }
   let disposed = false;
   return {
     root,

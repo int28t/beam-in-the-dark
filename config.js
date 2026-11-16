@@ -1,4 +1,4 @@
-export const VERSION = '0.11.0';
+export const VERSION = '0.12.0';
 export const PLAYER = Object.freeze({ speed: 2.65, radiusX: 0.24, radiusZ: 0.18 });
 export const ENEMY = Object.freeze({
   patrolSpeed: 0.95,

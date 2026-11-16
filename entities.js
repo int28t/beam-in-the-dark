@@ -32,7 +32,7 @@ export function createPlayer() {
   mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.25, 8), brass, 0.31, 0.68, -0.28).rotation.x =
     Math.PI / 2;
   mesh(new THREE.CircleGeometry(0.071, 12), glow, 0.31, 0.68, -0.409).rotation.y = Math.PI;
-  const light = new THREE.SpotLight(0xffe0a1, 34, 12, Math.PI / 6.5, 0.6, 1.5);
+  const light = new THREE.SpotLight(0xffe8bd, 160, 12, Math.PI / 6.5, 0.6, 1.5);
   light.position.set(0.31, 0.76, -0.4);
   light.castShadow = true;
   light.shadow.mapSize.set(1024, 1024);
