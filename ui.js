@@ -17,12 +17,12 @@ const PANELS = {
     note: 'На следующем этаже вас снова ждёт темнота.',
   },
   gameOver: {
-    caption: 'Луч погас', title: 'Вас поймали', description: 'Попробуйте пройти этот этаж ещё раз.',
+    caption: 'Луч погас', title: 'Вас поймали', description: 'Попробуйте пройти этот этаж ещё раз. Повтор начнёт новую серию на этом же этаже.',
     actions: [['restart', 'Повторить этаж'], ['newRun', 'С первого этажа']], note: '',
   },
 };
 
-export function createUI(onAction, { touch }) {
+export function createUI(onAction, { touch,tutorialSeen=false }) {
   const overlay = document.querySelector('#overlay');
   const panel = overlay.querySelector('.panel');
   const actions = document.querySelector('#panel-actions');
@@ -36,8 +36,14 @@ export function createUI(onAction, { touch }) {
   const batteryValue=document.querySelector('#battery-value');
   const danger=document.querySelector('#danger');
   const instructions=document.querySelector('#instructions');
+  instructions.open=!tutorialSeen;
+  const mute=document.querySelector('#mute');
+  const streak=document.querySelector('#streak');
+  const best=document.querySelector('#best');
+  let lastStreak=-1;
   let lastBattery=-1,lastLight;
   const events = new AbortController();
+  mute.addEventListener('click',()=>onAction('toggleMute'),{signal:events.signal});
   flashlight.addEventListener('click',()=>onAction('toggleLight'),{signal:events.signal});
   let lastPhase;
   let lastKey;
@@ -64,9 +70,11 @@ export function createUI(onAction, { touch }) {
     ? 'Джойстик — движение и направление света'
     : '<kbd>W A S D</kbd> / стрелки — движение　 Мышь — свет　 <kbd>F</kbd> — фонарь　 <kbd>Esc</kbd> — пауза';
   return {
+    setProgress(progress){best.textContent=String(progress.best);mute.setAttribute('aria-pressed',String(progress.muted));mute.textContent=progress.muted?'Звук выключен · M':'Звук включён · M';},
     setFloorCode(seed,floor){document.querySelector('#floor-code').textContent=`Код этажа: ${seed}:${floor}`;},
     render(state, { nearLockedExit = false,threat=false,lightHit=false } = {}) {
       const playing = state.phase === 'playing';
+      if(state.streak!==lastStreak){streak.textContent=String(state.streak);lastStreak=state.streak;}
       pause.hidden = !playing;
       flashlight.disabled=!playing||state.battery<=0;
       const charge=Math.ceil(state.battery);

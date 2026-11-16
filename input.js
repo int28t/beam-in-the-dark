@@ -47,11 +47,12 @@ export function createInputState() {
   };
 }
 
-export function createInput(element, { joystickZone, nipplejs, onPause, onToggle = () => {} }) {
+export function createInput(element, { joystickZone, nipplejs, onPause, onToggle = () => {}, onMute = () => {} }) {
   const controller = new AbortController();
   const { signal } = controller;
   const model = createInputState();
   window.addEventListener('keydown', event => {
+    if(event.code==='KeyM'&&!event.repeat&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();onMute();}
     if(model.enabled&&event.code==='KeyF'&&!event.repeat&&!event.ctrlKey&&!event.metaKey&&!event.altKey){event.preventDefault();onToggle();}
     if (event.code === 'Escape' && !event.repeat) onPause();
     if (!model.enabled || !MOVEMENT_CODES.has(event.code) || event.metaKey || event.ctrlKey || event.altKey) return;

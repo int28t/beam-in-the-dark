@@ -17,9 +17,10 @@
     <div id="scene" aria-label="Игровой мир"></div>
     <div class="vignette" aria-hidden="true"></div>
     <header class="hud">
-      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.3.0</small></div></div>
+      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.8.0</small></div></div>
       <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
     </header>
+    <div class="records"><span>Серия без поражений: <b id="streak">0</b></span><span>Рекорд: <b id="best">0</b></span></div>
     <div class="equipment"><button id="flashlight" type="button" aria-pressed="true">Фонарь <kbd>F</kbd></button><div id="battery-meter" role="meter" aria-label="Заряд фонаря" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="battery-fill"></div></div><span id="battery-value">100%</span></div>
     <div id="danger" class="danger" role="status" hidden>Вас преследуют</div>
     <div class="objective" id="objective" role="status">Свет покажет дорогу</div>
@@ -30,9 +31,10 @@
         <h1 id="panel-title">Beam in<br>the Dark</h1>
         <p id="panel-description">Подготавливаем свет и тени…</p>
         <div id="panel-actions" class="panel-actions"></div>
+        <div class="sound-settings"><button id="mute" type="button" aria-pressed="false">Звук включён · M</button></div>
         <details id="instructions" class="instructions" open>
           <summary>Как играть</summary>
-          <p>WASD / стрелки — движение. Мышь — направление света. F — включить или выключить фонарь. Esc — пауза.</p>
+          <p>WASD / стрелки — движение. Мышь — направление света. F — включить или выключить фонарь. M — звук. Esc — пауза.</p>
           <p>Найдите золотой ключ и бирюзовую дверь. Стены скрывают вас от тени. Свет замедляет её, но быстрее тратит заряд. Батарейки пополняют фонарь; при нуле остаётся только слабый ореол.</p>
         </details>
         <p id="floor-code" class="panel-footnote"></p>

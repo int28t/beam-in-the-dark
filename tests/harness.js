@@ -10,11 +10,11 @@ export function throws(run) {
   assert(thrown, 'Ожидалась ошибка входных данных');
 }
 
-export function runTests() {
+export async function runTests() {
   const lines = [];
   let failed = 0;
   for (const { name, run } of tests) {
-    try { run(); lines.push(`PASS ${name}`); }
+    try { await run(); lines.push(`PASS ${name}`); }
     catch (error) { failed++; lines.push(`FAIL ${name}: ${error.message}`); }
   }
   const summary = `${tests.length - failed}/${tests.length} passed`;

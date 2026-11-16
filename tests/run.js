@@ -9,6 +9,7 @@ import './enemy.test.js';
 import './world.test.js';
 import './generator.test.js';
 import './difficulty.test.js';
+import './progress.test.js';
 
 test('Парсер: координаты, непроходимые стены и точки появления', () => {
   const map = parseMap(['#####', '#P.K#', '#..D#', '#####']);
@@ -172,4 +173,4 @@ test('Ввод: полный сброс этажа возвращает нача
   near(controls.aimX, 0); near(controls.aimZ, -1); near(controls.moveX, 0);
 });
 
-runTests();
+await runTests();

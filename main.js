@@ -10,6 +10,8 @@ import { createWorld } from './world.js';
 import { createEnemyView } from './enemy-view.js';
 import { createGame } from './game.js';
 import { createUI } from './ui.js';
+import { loadProgress,saveProgress } from './storage.js';
+import { createAudio } from './audio.js';
 
 export function start() {
   const container = document.querySelector('#scene');
@@ -47,9 +49,12 @@ export function start() {
   const randomSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
   let runSeed=requestedSeed!==null&&/^\d{1,10}$/.test(requestedSeed)?Number(requestedSeed)>>>0:randomSeed();
   const game = createGame();
+  const progress=loadProgress();
+  const audio=createAudio();audio.setMuted(progress.muted);
   const touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-  const ui = createUI(action => act(action), { touch });
-  const input = createInput(container, { joystickZone: document.querySelector('#joystick'), nipplejs,onToggle(){act('toggleLight');},
+  const ui = createUI(action => act(action), { touch,tutorialSeen:progress.tutorialSeen });
+  ui.setProgress(progress);
+  const input = createInput(container, { joystickZone: document.querySelector('#joystick'), nipplejs,onToggle(){act('toggleLight');},onMute(){act('toggleMute');},
     onPause() {
       if (game.state.phase === 'playing') act('pause');
       else if (game.state.phase === 'paused') act('resume');
@@ -88,12 +93,24 @@ export function start() {
       input.setEnabled(game.state.phase === 'playing');
       previous = null;
       activePhase = game.state.phase;
+      if(activePhase!=='playing')audio.pause();
     }
     mapView.update(time, game.state.hasKey,world.collected);
     player.light.visible=game.state.lightOn;
   }
-  function act(action) { if(action==='newRun'&&game.state.phase!=='playing')runSeed=randomSeed();game.dispatch(action);sync(); }
-  function pause() { if (game.state.phase === 'playing') act('pause'); else input.reset(); }
+  function act(action) {
+    if(action==='toggleMute'){
+      progress.muted=!progress.muted;audio.setMuted(progress.muted);
+      if(!progress.muted)void audio.unlock();saveProgress(undefined,progress);ui.setProgress(progress);return;
+    }
+    if(['start','resume','restart','next','newRun','toggleLight'].includes(action))void audio.unlock();
+    if(action==='newRun'&&game.state.phase!=='playing')runSeed=randomSeed();
+    if(action==='start'&&!progress.tutorialSeen){progress.tutorialSeen=true;saveProgress(undefined,progress);}
+    const lightWasOn=game.state.lightOn;
+    game.dispatch(action);sync();
+    if(lightWasOn!==game.state.lightOn&&action==='toggleLight')audio.play('click');
+  }
+  function pause() { audio.pause();if (game.state.phase === 'playing') act('pause'); else input.reset(); }
   function resize() {
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
@@ -133,6 +150,11 @@ export function start() {
       player.update(time,feedback.walking,world.aim.x,world.aim.z);
       for(let i=0;i<world.enemies.length;i++) enemyViews[i].update(world.enemies[i],time);
       if (activePhase !== game.state.phase) sync();
+      if(game.state.phase==='playing')audio.update(dt,feedback);
+      if(feedback.keyPicked)audio.play('key');
+      if(feedback.batteriesPicked)audio.play('battery');
+      if(feedback.caught)audio.play('caught');
+      if(feedback.completed){audio.play('complete');if(game.state.streak>progress.best){progress.best=game.state.streak;saveProgress(undefined,progress);ui.setProgress(progress);}}
       ui.render(game.state,feedback);
       mapView.update(time,game.state.hasKey,world.collected);
       player.light.visible=game.state.lightOn;
@@ -150,7 +172,7 @@ export function start() {
     if (disposed) return;
     disposed = true;
     cancelAnimationFrame(animation);
-    events.abort(); input.dispose(); ui.dispose(); player.dispose(); enemyViews.forEach(view=>view.dispose()); mapView.dispose(); renderer.dispose();
+    events.abort(); audio.dispose(); input.dispose(); ui.dispose(); player.dispose(); enemyViews.forEach(view=>view.dispose()); mapView.dispose(); renderer.dispose();
     renderer.domElement.remove();
   }
   window.addEventListener('pagehide', event => { pause(); if (!event.persisted) dispose(); }, { signal: events.signal });
