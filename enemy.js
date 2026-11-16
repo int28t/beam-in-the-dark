@@ -1,8 +1,8 @@
-import { ENEMY } from './config.js';
-import { createEnemySenses } from './enemy-senses.js';
-import { getMonsterType } from './monster-types.js';
-import { findPath, cellIndex, hasLineOfSight } from './navigation.js';
-import { moveCircle } from './collision.js';
+import { ENEMY } from './config.js?v=0.13.0';
+import { createEnemySenses } from './enemy-senses.js?v=0.13.0';
+import { getMonsterType } from './monster-types.js?v=0.13.0';
+import { findPath, cellIndex, hasLineOfSight } from './navigation.js?v=0.13.0';
+import { moveCircle } from './collision.js?v=0.13.0';
 
 export function createEnemy(spawn, map, options = {}) {
   const profile = getMonsterType(spawn.type);

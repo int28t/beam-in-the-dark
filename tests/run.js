@@ -1,21 +1,23 @@
-import './hotfix.test.js';
-import './level-art.test.js';
-import { parseMap } from '../map.js';
-import { moveCircle } from '../collision.js';
-import { normalizeMovement, createInputState } from '../input.js';
-import { createGame } from '../game.js';
-import { FLOOR_TEMPLATE } from '../map.js';
+import './cloud-save.test.js?v=0.13.0';
+import './admin-save.test.js?v=0.13.0';
+import './hotfix.test.js?v=0.13.0';
+import './level-art.test.js?v=0.13.0';
+import { parseMap } from '../map.js?v=0.13.0';
+import { moveCircle } from '../collision.js?v=0.13.0';
+import { normalizeMovement, createInputState } from '../input.js?v=0.13.0';
+import { createGame } from '../game.js?v=0.13.0';
+import { FLOOR_TEMPLATE } from '../map.js?v=0.13.0';
 
-import { test, assert, near, throws, runTests } from './harness.js';
-import './enemy.test.js';
-import './world.test.js';
-import './generator.test.js';
-import './difficulty.test.js';
-import './progress.test.js';
-import './integration.test.js';
-import './mobile.test.js';
-import './biomes.test.js';
-import './monster-types.test.js';
+import { test, assert, near, throws, runTests } from './harness.js?v=0.13.0';
+import './enemy.test.js?v=0.13.0';
+import './world.test.js?v=0.13.0';
+import './generator.test.js?v=0.13.0';
+import './difficulty.test.js?v=0.13.0';
+import './progress.test.js?v=0.13.0';
+import './integration.test.js?v=0.13.0';
+import './mobile.test.js?v=0.13.0';
+import './biomes.test.js?v=0.13.0';
+import './monster-types.test.js?v=0.13.0';
 
 test('Парсер: координаты, непроходимые стены и точки появления', () => {
   const map = parseMap(['#####', '#P.K#', '#..D#', '#####']);

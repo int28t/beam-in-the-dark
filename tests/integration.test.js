@@ -1,10 +1,10 @@
-import { test } from './harness.js';
-import { generateFloor } from '../generator.js';
-import { getDifficulty } from '../difficulty.js';
-import { findPath } from '../navigation.js';
-import { createWorld } from '../world.js';
-import { createGame } from '../game.js';
-import { PLAYER } from '../config.js';
+import { test } from './harness.js?v=0.13.0';
+import { generateFloor } from '../generator.js?v=0.13.0';
+import { getDifficulty } from '../difficulty.js?v=0.13.0';
+import { findPath } from '../navigation.js?v=0.13.0';
+import { createWorld } from '../world.js?v=0.13.0';
+import { createGame } from '../game.js?v=0.13.0';
+import { PLAYER } from '../config.js?v=0.13.0';
 test('Интеграция: 100 этажей проходимы эллипсом, ключ и дверь работают (без врагов)', () => {
   let steps = 0;
   for (let seed = 0; seed < 50; seed++)

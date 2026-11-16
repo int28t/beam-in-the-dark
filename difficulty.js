@@ -1,4 +1,4 @@
-import { ENEMY } from './config.js';
+import { ENEMY } from './config.js?v=0.13.0';
 
 export function getDifficulty(floor) {
   const level = Number.isFinite(floor) ? Math.min(12, Math.max(1, Math.floor(floor))) : 1;

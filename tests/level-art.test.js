@@ -1,7 +1,7 @@
-import { test, assert } from './harness.js';
-import { parseMap, CELL_SIZE } from '../map.js';
-import { generateFloor } from '../generator.js';
-import { createLevelArt } from '../level-art.js';
+import { test, assert } from './harness.js?v=0.13.0';
+import { parseMap, CELL_SIZE } from '../map.js?v=0.13.0';
+import { generateFloor } from '../generator.js?v=0.13.0';
+import { createLevelArt } from '../level-art.js?v=0.13.0';
 test('Оформление уровней: полы и грани точно следуют проходимой сетке', () => {
   const map = parseMap(['#####', '#P..#', '#.#.#', '#...#', '#####']);
   const art = createLevelArt(map);

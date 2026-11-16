@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { getMonsterType } from './monster-types.js';
-import { createGuardLantern } from './guard-lantern.js';
-import { createArmorParts } from './stone-armor.js';
+import { getMonsterType } from './monster-types.js?v=0.13.0';
+import { createGuardLantern } from './guard-lantern.js?v=0.13.0';
+import { createArmorParts } from './stone-armor.js?v=0.13.0';
 
 export function createEnemyView(type, map) {
   const profile = getMonsterType(type);

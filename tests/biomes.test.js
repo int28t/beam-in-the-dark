@@ -1,9 +1,9 @@
-import { test, assert } from './harness.js';
-import { getFloorBiome, getBiome } from '../biomes.js';
-import { getAvailableMonsterTypes } from '../monster-types.js';
-import { decorateFloor } from '../floor-theme.js';
-import { generateFloor, validateFloor } from '../generator.js';
-import { getDifficulty } from '../difficulty.js';
+import { test, assert } from './harness.js?v=0.13.0';
+import { getFloorBiome, getBiome } from '../biomes.js?v=0.13.0';
+import { getAvailableMonsterTypes } from '../monster-types.js?v=0.13.0';
+import { decorateFloor } from '../floor-theme.js?v=0.13.0';
+import { generateFloor, validateFloor } from '../generator.js?v=0.13.0';
+import { getDifficulty } from '../difficulty.js?v=0.13.0';
 test('Биомы: три последовательных этапа и повтор цикла, неверный ввод безопасен', () => {
   assert(getFloorBiome(1).id === 'fortress' && getFloorBiome(3).id === 'fortress');
   assert(getFloorBiome(4).id === 'flooded' && getFloorBiome(7).id === 'ash');

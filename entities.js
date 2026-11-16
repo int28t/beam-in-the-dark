@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getSkin } from './skins.js?v=0.13.0';
 
 export function createPlayer() {
   const root = new THREE.Group();
@@ -51,6 +52,11 @@ export function createPlayer() {
     root,
     light,
     lightTarget,
+    setSkin(id) {
+      const skin = getSkin(id);
+      cloak.color.setHex(skin.cloak);
+      hood.color.setHex(skin.hood);
+    },
     update(time, moving, aimX, aimZ) {
       if (aimX || aimZ) body.rotation.y = Math.atan2(-aimX, -aimZ);
       body.position.y = moving ? Math.sin(time * 11) * 0.035 : Math.sin(time * 2) * 0.012;

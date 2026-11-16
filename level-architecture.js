@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CELL_SIZE as CELL } from './map.js';
+import { CELL_SIZE as CELL } from './map.js?v=0.13.0';
 
 // One bevelled block is reused for slabs, masonry and architectural mouldings.
 function stoneBlock() {

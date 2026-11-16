@@ -1,17 +1,18 @@
 // CPU checks against the real Three.js geometry; no renderer or GPU is exercised.
 import * as THREE from 'three';
-import { test, assert, runTests } from './harness.js';
-import { generateFloor } from '../generator.js';
-import { parseMap } from '../map.js';
-import { getBiome } from '../biomes.js';
-import { createLevelArt } from '../level-art.js';
-import { createLevelArchitecture } from '../level-architecture.js';
-import { createMapView } from '../map-view.js';
-import { createPlayer } from '../entities.js';
-import { createEnemyView } from '../enemy-view.js';
-import { createEnemy } from '../enemy.js';
-import { MONSTER_TYPES } from '../monster-types.js';
-import { hasLineOfSight } from '../navigation.js';
+import { test, assert, runTests } from './harness.js?v=0.13.0';
+import { generateFloor } from '../generator.js?v=0.13.0';
+import { parseMap } from '../map.js?v=0.13.0';
+import { getBiome } from '../biomes.js?v=0.13.0';
+import { createLevelArt } from '../level-art.js?v=0.13.0';
+import { createLevelArchitecture } from '../level-architecture.js?v=0.13.0';
+import { createMapView } from '../map-view.js?v=0.13.0';
+import { createPlayer } from '../entities.js?v=0.13.0';
+import { SKINS } from '../skins.js?v=0.13.0';
+import { createEnemyView } from '../enemy-view.js?v=0.13.0';
+import { createEnemy } from '../enemy.js?v=0.13.0';
+import { MONSTER_TYPES } from '../monster-types.js?v=0.13.0';
+import { hasLineOfSight } from '../navigation.js?v=0.13.0';
 
 test('Кладка видима перед непрозрачной основой стены', () => {
   const map = parseMap(['#####', '#P..#', '#...#', '#...#', '#####']);
@@ -159,6 +160,28 @@ test('Красный сектор не рисуется за стенами ме
     } finally {
       view.dispose();
     }
+  }
+});
+test('Плащи меняют палитру без новых геометрий и материалов', () => {
+  const player = createPlayer(),
+    before = new Set();
+  player.root.traverse((node) => {
+    if (node.geometry) before.add(node.geometry);
+    if (node.material) before.add(node.material);
+  });
+  try {
+    for (const id of Object.keys(SKINS)) {
+      player.setSkin(id);
+      const colors = [];
+      player.root.traverse((node) => {
+        if (node.material?.color) colors.push(node.material.color.getHex());
+        if (node.geometry) assert(before.has(node.geometry));
+        if (node.material) assert(before.has(node.material));
+      });
+      assert(colors.includes(SKINS[id].cloak) && colors.includes(SKINS[id].hood));
+    }
+  } finally {
+    player.dispose();
   }
 });
 await runTests();

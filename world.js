@@ -1,7 +1,7 @@
-import { PLAYER, FLASHLIGHT } from './config.js';
-import { createEllipseCollider } from './collision.js';
-import { createEnemy } from './enemy.js';
-import { distancesFrom, cellPoint, cellIndex, hasLineOfSight } from './navigation.js';
+import { PLAYER, FLASHLIGHT } from './config.js?v=0.13.0';
+import { createEllipseCollider } from './collision.js?v=0.13.0';
+import { createEnemy } from './enemy.js?v=0.13.0';
+import { distancesFrom, cellPoint, cellIndex, hasLineOfSight } from './navigation.js?v=0.13.0';
 
 export function createWorld(map) {
   const position = { ...map.spawns.player },
@@ -116,7 +116,7 @@ export function createWorld(map) {
         const contact =
           Math.hypot(position.x - enemy.position.x, position.z - enemy.position.z) <
           enemy.contactRadius;
-        if (contact && enemy.lethal) frame.caught = true;
+        if (contact && enemy.lethal && !game.state.cheats?.invincible) frame.caught = true;
         if (contact && !enemy.lethal && hasLineOfSight(position, enemy.position, map)) {
           const bite = enemy.tryBite(game.state.lightOn);
           if (bite) {

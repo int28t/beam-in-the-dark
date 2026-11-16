@@ -1,11 +1,11 @@
-import { test, assert, near } from './harness.js';
-import { createEnemy } from '../enemy.js';
-import { createWorld } from '../world.js';
-import { createGame } from '../game.js';
-import { createInputState } from '../input.js';
-import { parseMap } from '../map.js';
-import { generateFloor } from '../generator.js';
-import { MONSTER_TYPES } from '../monster-types.js';
+import { test, assert, near } from './harness.js?v=0.13.0';
+import { createEnemy } from '../enemy.js?v=0.13.0';
+import { createWorld } from '../world.js?v=0.13.0';
+import { createGame } from '../game.js?v=0.13.0';
+import { createInputState } from '../input.js?v=0.13.0';
+import { parseMap } from '../map.js?v=0.13.0';
+import { generateFloor } from '../generator.js?v=0.13.0';
+import { MONSTER_TYPES } from '../monster-types.js?v=0.13.0';
 const open = parseMap([
   '#############',
   '#P.K......D.#',
@@ -187,7 +187,7 @@ test('Тихая ходьба: полный упор в стену не выда
 });
 
 test('Красный сектор: дистанция луча заканчивается у первой стены', async () => {
-  const { rayWallDistance } = await import('../navigation.js');
+  const { rayWallDistance } = await import('../navigation.js?v=0.13.0');
   const map = parseMap(['#######', '#P.#..#', '#..#..#', '#.....#', '#######']);
   near(rayWallDistance(3, 1.5, 1, 0, 7, map), 0.75);
   near(rayWallDistance(3, 4.5, 1, 0, 7, map), 5.25);

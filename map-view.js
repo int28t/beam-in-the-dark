@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { createLevelArt } from './level-art.js';
-import { createLevelArchitecture } from './level-architecture.js';
-import { getBiome } from './biomes.js';
-import { createBiomeDecor } from './biome-view.js';
+import { createLevelArt } from './level-art.js?v=0.13.0';
+import { createLevelArchitecture } from './level-architecture.js?v=0.13.0';
+import { getBiome } from './biomes.js?v=0.13.0';
+import { createBiomeDecor } from './biome-view.js?v=0.13.0';
 
 export function createMapView(map) {
   const biome = getBiome(map.biome);

@@ -17,7 +17,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <title>Beam in the Dark — один фонарь против темноты</title>
   <link rel="icon" type="image/jpeg" href="./assets/logo.jpg">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=0.13.0">
   <script id="telegram-sdk" src="https://telegram.org/js/telegram-web-app.js?65" async></script>
   <script type="importmap">
     {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","nipplejs":"https://cdn.jsdelivr.net/npm/nipplejs@1.0.4/dist/index.mjs"}}
@@ -28,7 +28,7 @@
     <div id="scene" aria-label="Игровой мир"></div>
     <div class="vignette" aria-hidden="true"></div>
     <header class="hud">
-      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.12.0</small><small id="biome-name">Глухая крепость</small></div></div>
+      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.13.0</small><small id="biome-name">Глухая крепость</small></div></div>
       <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
     </header>
     <div class="records"><span>Серия без поражений: <b id="streak">0</b></span><span>Рекорд: <b id="best">0</b></span></div>
@@ -48,6 +48,22 @@
           <label for="quality">Качество</label><select id="quality"><option value="auto">Авто</option><option value="low">Экономное</option><option value="normal">Обычное</option></select>
           <label id="aim-label" for="touch-aim">Прицеливание</label><select id="touch-aim"><option value="movement">По движению</option><option value="dual">Правый джойстик</option></select>
         </div>
+        <label class="skin-label" for="skin">Плащ</label><select id="skin" aria-label="Выбрать плащ"></select>
+        <p id="save-status" class="panel-footnote" role="status">Сохранение на устройстве</p>
+        <p id="practice-note" class="panel-footnote" hidden>Тренировочный забег: рекорд не обновляется.</p>
+        <button id="dev-open" type="button" aria-expanded="false" aria-controls="dev-panel" hidden>[DEV]</button>
+        <section id="dev-panel" class="dev-panel" aria-label="Инструменты разработчика" hidden>
+          <p>Только для тестирования. Игровые читы отключают рекорд до нового забега.</p>
+          <label><input type="checkbox" data-debug="invincible"> Бессмертие</label>
+          <label><input type="checkbox" data-debug="infiniteLight"> Бесконечный заряд</label>
+          <button type="button" data-debug="key">Выдать ключ</button>
+          <label for="dev-floor">Этаж (1–9999)</label><input id="dev-floor" type="number" min="1" max="9999" step="1" value="1">
+          <button type="button" data-debug="floor">Перейти на этаж</button>
+          <button type="button" data-debug="skins">Открыть все плащи</button>
+          <button type="button" data-debug="requestReset">Сбросить прогресс…</button>
+          <div id="dev-reset-confirm" hidden><p>Удалить рекорд, плащи и настройки на устройстве и в облаке этого Telegram-аккаунта?</p><button type="button" data-debug="reset">Да, сбросить</button><button type="button" data-debug="cancelReset">Отмена</button></div>
+          <p id="dev-message" role="status"></p>
+        </section>
         <p id="performance-note" class="panel-footnote">Замер FPS появится после начала игры.</p>
         <button id="fullscreen" type="button" hidden>На весь экран</button>
         <p id="fullscreen-note" class="panel-footnote" role="status" hidden></p>
@@ -84,7 +100,7 @@
     const timeout = setTimeout(() => {
       if (!started) showError('Загрузка затянулась. Проверьте соединение и доступ к cdn.jsdelivr.net, затем обновите страницу.');
     }, 20000);
-    import('./main.js').then(({ start }) => {
+    import('./main.js?v=0.13.0').then(({ start }) => {
       start();
       started = true;
       clearTimeout(timeout);

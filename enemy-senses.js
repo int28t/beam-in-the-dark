@@ -1,5 +1,5 @@
-import { findPath, inCone, hasLineOfSight } from './navigation.js';
-import { CELL_SIZE } from './map.js';
+import { findPath, inCone, hasLineOfSight } from './navigation.js?v=0.13.0';
+import { CELL_SIZE } from './map.js?v=0.13.0';
 
 // Persistent sensor state; targets are copied only on genuine new observations.
 export function createEnemySenses(type, map, config) {
