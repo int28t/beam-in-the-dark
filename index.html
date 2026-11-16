@@ -28,11 +28,12 @@
     <div id="scene" aria-label="Игровой мир"></div>
     <div class="vignette" aria-hidden="true"></div>
     <header class="hud">
-      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.10.0</small><small id="biome-name">Глухая крепость</small></div></div>
+      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.12.0</small><small id="biome-name">Глухая крепость</small></div></div>
       <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
     </header>
     <div class="records"><span>Серия без поражений: <b id="streak">0</b></span><span>Рекорд: <b id="best">0</b></span></div>
     <button class="flashlight-control" id="flashlight" type="button" aria-pressed="true" aria-label="Включить или выключить фонарь">Фонарь <kbd>F</kbd></button><div class="equipment"><div id="battery-meter" role="meter" aria-label="Заряд фонаря" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="battery-fill"></div></div><span id="battery-value">100%</span></div>
+    <button class="sneak-control" id="sneak" type="button" aria-pressed="false" hidden>Тихий шаг <kbd>Shift</kbd></button>
     <div id="danger" class="danger" role="status" hidden>Вас преследуют</div>
     <div class="objective" id="objective" role="status">Свет покажет дорогу</div>
     <div id="overlay" class="overlay">
@@ -52,11 +53,14 @@
         <p id="fullscreen-note" class="panel-footnote" role="status" hidden></p>
         <details id="instructions" class="instructions" open>
           <summary>Как играть</summary>
-          <p id="control-instructions">WASD / стрелки — движение. Мышь — направление света. F — включить или выключить фонарь. M — звук. Esc — пауза.</p>
-          <p>Найдите золотой ключ и бирюзовую дверь. Стены скрывают вас от взгляда врагов. Свет замедляет их, но быстрее тратит заряд. Батарейки пополняют фонарь; при нуле остаётся только слабый ореол.</p>
-          <p><strong>Тень · с 1 этажа.</strong> Видит перед собой и слышит близкие шаги. Скройтесь за стеной и смените позицию.</p>
-          <p><strong>Слухач · с 3 этажа.</strong> Слепой, но слышит шаги за углом. Остановитесь — он пойдёт к месту последнего звука. Луч замедляет его.</p>
-          <p><strong>Ловчий · с 6 этажа.</strong> Янтарная вспышка предупреждает о прямом рывке. Уйдите в сторону или сорвите подготовку светом; после рывка он восстанавливается.</p>
+          <p id="control-instructions">WASD / стрелки — движение. Мышь — направление света. Shift — тихая ходьба. F — включить или выключить фонарь. M — звук. Esc — пауза.</p>
+          <p>Найдите золотой ключ и бирюзовую дверь. Стены скрывают вас от взгляда врагов. Свет сдерживает Сталкера, Мимика и Ловчего, но быстрее тратит заряд. Батарейки пополняют фонарь; при нуле остаётся только слабый ореол.</p>
+          <p><strong>Сталкер-Тень · с 1 этажа.</strong> Заходит со спины. Под лучом замирает и пятится, прикрывая глаза.</p>
+          <p><strong>Слепой Громила · с 3 этажа.</strong> Не боится света. На громкие шаги отвечает рёвом и броском к месту шума. Shift или «Тихий шаг» позволяют подкрасться; слабое отклонение стика тоже тише.</p>
+          <p><strong>Надзиратель · с 5 этажа.</strong> Красный сектор — его обзор. Скройтесь за стеной и смените позицию; ваш луч его не остановит.</p>
+          <p><strong>Ловчий · с 6 этажа.</strong> Янтарная вспышка предупреждает о прямом рывке. Уйдите в сторону или сорвите подготовку светом.</p>
+          <p><strong>Мимик · с 7 этажа.</strong> Каменный доспех. Держите под лучом или близким взглядом: при отвороте он скользит за вами. Скрежет выдаёт движение.</p>
+          <p><strong>Пожиратель света · с 10 этажа.</strong> Фиолетовое ядро летит к включённому фонарю. Укус отнимает 35 заряда, но не убивает. Выключите луч — он потеряет интерес.</p>
         </details>
         <p id="floor-code" class="panel-footnote"></p>
         <p class="panel-footnote" id="panel-note">Тёмный замок. Один луч света.</p>

@@ -125,7 +125,7 @@ export function start() {
     mapView = createMapView(map);
     scene.add(mapView.root);
     enemyViews = world.enemies.map((enemy) => {
-      const view = createEnemyView(enemy.type);
+      const view = createEnemyView(enemy.type, map);
       scene.add(view.root);
       return view;
     });
@@ -171,6 +171,10 @@ export function start() {
     resize();
   }
   function act(action, value) {
+    if (action === 'toggleSneak') {
+      input.toggleSneak();
+      return;
+    }
     if (action === 'toggleFullscreen') {
       platform.toggleFullscreen();
       return;
@@ -277,6 +281,8 @@ export function start() {
       }
       if (feedback.threat && !wasThreat) platform.haptic('danger');
       wasThreat = feedback.threat;
+      if (feedback.roar) audio.play('roar');
+      if (feedback.parasiteHit) audio.play('parasite');
       if (feedback.batteriesPicked) audio.play('battery');
       if (feedback.caught) {
         audio.play('caught');

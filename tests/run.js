@@ -1,3 +1,5 @@
+import './hotfix.test.js';
+import './level-art.test.js';
 import { parseMap } from '../map.js';
 import { moveCircle } from '../collision.js';
 import { normalizeMovement, createInputState } from '../input.js';

@@ -72,6 +72,11 @@ export function createGame() {
     }
     return state;
   }
+  function drainBattery(amount) {
+    if (state.phase !== 'playing' || !Number.isFinite(amount) || amount <= 0) return;
+    state.battery = Math.max(0, state.battery - amount);
+    if (state.battery === 0) state.lightOn = false;
+  }
   function drainLight(dt, exposed) {
     if (state.phase !== 'playing' || !state.lightOn) return;
     state.battery = Math.max(
@@ -81,5 +86,5 @@ export function createGame() {
     );
     if (state.battery === 0) state.lightOn = false;
   }
-  return { state, dispatch, resetFloor, resolveFrame, drainLight };
+  return { state, dispatch, resetFloor, resolveFrame, drainLight, drainBattery };
 }

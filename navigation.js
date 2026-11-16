@@ -91,3 +91,30 @@ export function findPath(start, goal, map) {
   }
   return path.reverse();
 }
+
+// Distance along a unit horizontal ray to the first wall, including origins inside a wall.
+export function rayWallDistance(x, z, dx, dz, range, map) {
+  let nearest = range;
+  for (const wall of map.walls) {
+    let enter = 0,
+      leave = nearest;
+    if (Math.abs(dx) < 1e-10) {
+      if (x < wall.minX || x > wall.maxX) continue;
+    } else {
+      const a = (wall.minX - x) / dx,
+        b = (wall.maxX - x) / dx;
+      enter = Math.max(enter, Math.min(a, b));
+      leave = Math.min(leave, Math.max(a, b));
+    }
+    if (Math.abs(dz) < 1e-10) {
+      if (z < wall.minZ || z > wall.maxZ) continue;
+    } else {
+      const a = (wall.minZ - z) / dz,
+        b = (wall.maxZ - z) / dz;
+      enter = Math.max(enter, Math.min(a, b));
+      leave = Math.min(leave, Math.max(a, b));
+    }
+    if (enter <= leave) nearest = enter;
+  }
+  return nearest;
+}
