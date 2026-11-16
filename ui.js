@@ -153,10 +153,18 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
       fullscreenNote.textContent = info.fullscreenError;
       fullscreenNote.hidden = !info.fullscreenError;
     },
-    setFloorCode(seed, floor) {
+    setFloorCode(seed, floor, biome) {
+      if (biome) {
+        document.querySelector('#biome-name').textContent = biome.name;
+        document.querySelector('#biome-name').style.color =
+          `#${biome.accent.toString(16).padStart(6, '0')}`;
+      }
       document.querySelector('#floor-code').textContent = `Код этажа: ${seed}:${floor}`;
     },
-    render(state, { nearLockedExit = false, threat = false, lightHit = false } = {}) {
+    render(
+      state,
+      { nearLockedExit = false, threat = false, lightHit = false, warning = false } = {},
+    ) {
       const playing = state.phase === 'playing';
       if (state.streak !== lastStreak) {
         streak.textContent = String(state.streak);
@@ -177,7 +185,11 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
         lastLight = state.lightOn;
       }
       danger.hidden = !playing || !threat;
-      danger.textContent = lightHit ? 'Свет сдерживает тень' : 'Вас преследуют';
+      danger.textContent = warning
+        ? 'Ловчий готовит рывок — уйди в сторону'
+        : lightHit
+          ? 'Свет сдерживает преследователя'
+          : 'Вас преследуют';
       touchControls.hidden = !touch || !playing;
       document.querySelector('#scene').setAttribute('aria-hidden', String(!playing));
       const message =

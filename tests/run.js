@@ -12,6 +12,8 @@ import './difficulty.test.js';
 import './progress.test.js';
 import './integration.test.js';
 import './mobile.test.js';
+import './biomes.test.js';
+import './monster-types.test.js';
 
 test('Парсер: координаты, непроходимые стены и точки появления', () => {
   const map = parseMap(['#####', '#P.K#', '#..D#', '#####']);

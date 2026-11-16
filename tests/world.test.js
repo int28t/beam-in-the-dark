@@ -83,3 +83,20 @@ test('Мир: контакт с врагом даёт поражение до п
   world.step(0.05, controls, game);
   assert(game.state.phase === 'gameOver' && !game.state.hasKey);
 });
+
+test('Мир: подготовка Ловчего включает угрозу и подсказку, свет и пауза очищают её', () => {
+  const map = parseMap(['#########', '#P.K...D#', '#.......#', '#########']);
+  map.enemies = [{ x: 4.5, z: 1.5, type: 'charger', aimX: -1, aimZ: 0 }];
+  const world = createWorld(map),
+    game = createGame();
+  game.dispatch('start');
+  game.dispatch('toggleLight');
+  world.step(0.05, controls, game);
+  assert(world.feedback.warning && world.feedback.threat);
+  game.dispatch('toggleLight');
+  world.step(0.05, controls, game);
+  assert(world.enemies[0].phase === 'recover' && !world.feedback.warning);
+  game.dispatch('pause');
+  world.step(0.05, controls, game);
+  assert(!world.feedback.warning && !world.feedback.threat);
+});

@@ -1,3 +1,6 @@
+import { decorateFloor } from './floor-theme.js';
+import { BIOMES } from './biomes.js';
+import { MONSTER_TYPES } from './monster-types.js';
 import { parseMap, FLOOR_TEMPLATE, CELL_SIZE } from './map.js';
 import { cellIndex, cellPoint, distancesFrom, findPath } from './navigation.js';
 
@@ -273,6 +276,10 @@ export function validateFloor(map) {
     !Array.isArray(map.walls)
   )
     return { valid: false, errors: ['Неверная сетка'] };
+  if (map.biome && !Object.hasOwn(BIOMES, map.biome)) errors.push('Неизвестный биом');
+  for (const enemy of map.enemies ?? [])
+    if (enemy.type && !Object.hasOwn(MONSTER_TYPES, enemy.type))
+      errors.push('Неизвестный тип монстра');
   const points = [
     map.spawns?.player,
     map.spawns?.key,
@@ -315,7 +322,8 @@ export function generateFloor({
   for (let attempt = 0; attempt < 20; attempt++) {
     try {
       const candidate = buildCandidate(seed, floor, roomTemplates, difficulty, attempt);
-      if (candidate && validateFloor(candidate).valid) return candidate;
+      if (candidate && validateFloor(candidate).valid)
+        return decorateFloor(candidate, { seed, floor });
     } catch {
       /* Invalid content cannot trap generation in an unbounded loop. */
     }
@@ -331,5 +339,5 @@ export function generateFloor({
     enemyOptions: difficulty.enemyOptions ?? {},
   };
   if (!validateFloor(fallback).valid) throw new Error('Резервная карта не прошла проверку');
-  return fallback;
+  return decorateFloor(fallback, { seed, floor });
 }
