@@ -1,7 +1,7 @@
-import { test, assert, near } from './harness.js';
-import { loadProgress, saveProgress } from '../storage.js';
-import { createGame } from '../game.js';
-import { createAudio } from '../audio.js';
+import { test, assert, near } from './harness.js?v=0.13.0';
+import { loadProgress, saveProgress } from '../storage.js?v=0.13.0';
+import { createGame } from '../game.js?v=0.13.0';
+import { createAudio } from '../audio.js?v=0.13.0';
 function memoryStorage() {
   const data = new Map();
   return { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };

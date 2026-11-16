@@ -1,4 +1,4 @@
-import { FLASHLIGHT } from './config.js';
+import { FLASHLIGHT } from './config.js?v=0.13.0';
 
 export function createGame() {
   const state = {
@@ -9,6 +9,8 @@ export function createGame() {
     battery: FLASHLIGHT.capacity,
     lightOn: true,
     streak: 0,
+    practice: false,
+    cheats: { invincible: false, infiniteLight: false },
   };
   function resetFloor({ floor = state.floor } = {}) {
     state.floor = floor;
@@ -25,6 +27,7 @@ export function createGame() {
         break;
       case 'start':
         if (state.phase === 'menu') {
+          clearDebug();
           state.streak = 0;
           resetFloor({ floor: 1 });
         }
@@ -46,6 +49,7 @@ export function createGame() {
         break;
       case 'newRun':
         if (state.phase !== 'playing') {
+          clearDebug();
           state.streak = 0;
           resetFloor({ floor: 1 });
         }
@@ -58,7 +62,7 @@ export function createGame() {
   function resolveFrame({ caught = false, key = false, exit = false, battery = 0 } = {}) {
     if (state.phase !== 'playing') return state;
     // One outcome per frame. Defeat wins even if the player reaches the exit.
-    if (caught) {
+    if (caught && !state.cheats.invincible) {
       state.phase = 'gameOver';
       state.streak = 0;
       return state;
@@ -73,12 +77,18 @@ export function createGame() {
     return state;
   }
   function drainBattery(amount) {
-    if (state.phase !== 'playing' || !Number.isFinite(amount) || amount <= 0) return;
+    if (
+      state.phase !== 'playing' ||
+      state.cheats.infiniteLight ||
+      !Number.isFinite(amount) ||
+      amount <= 0
+    )
+      return;
     state.battery = Math.max(0, state.battery - amount);
     if (state.battery === 0) state.lightOn = false;
   }
   function drainLight(dt, exposed) {
-    if (state.phase !== 'playing' || !state.lightOn) return;
+    if (state.phase !== 'playing' || !state.lightOn || state.cheats.infiniteLight) return;
     state.battery = Math.max(
       0,
       state.battery -
@@ -86,5 +96,39 @@ export function createGame() {
     );
     if (state.battery === 0) state.lightOn = false;
   }
-  return { state, dispatch, resetFloor, resolveFrame, drainLight, drainBattery };
+  function clearDebug() {
+    state.practice = false;
+    state.cheats.invincible = state.cheats.infiniteLight = false;
+  }
+  function setDebug(patch) {
+    for (const key of ['invincible', 'infiniteLight'])
+      if (typeof patch[key] === 'boolean') {
+        state.cheats[key] = patch[key];
+        state.practice = true;
+      }
+    if (state.cheats.infiniteLight) {
+      state.battery = FLASHLIGHT.capacity;
+      state.lightOn = true;
+    }
+  }
+  function teleport(floor) {
+    if (state.phase !== 'paused' || !Number.isSafeInteger(floor) || floor < 1 || floor > 9999)
+      return false;
+    state.practice = true;
+    state.streak = 0;
+    resetFloor({ floor });
+    state.phase = 'paused';
+    return true;
+  }
+  return {
+    state,
+    dispatch,
+    resetFloor,
+    resolveFrame,
+    drainLight,
+    drainBattery,
+    setDebug,
+    teleport,
+    clearDebug,
+  };
 }

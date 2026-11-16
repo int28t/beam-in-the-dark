@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { CELL_SIZE } from './map.js';
-import { createLevelArt } from './level-art.js';
-import { createArmorParts } from './stone-armor.js';
+import { CELL_SIZE } from './map.js?v=0.13.0';
+import { createLevelArt } from './level-art.js?v=0.13.0';
+import { createArmorParts } from './stone-armor.js?v=0.13.0';
 
 export function createBiomeDecor(map, biome, art = createLevelArt(map)) {
   const root = new THREE.Group(),

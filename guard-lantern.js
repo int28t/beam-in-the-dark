@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { rayWallDistance } from './navigation.js';
+import { rayWallDistance } from './navigation.js?v=0.13.0';
 
 export function createGuardLantern(root, map) {
   const range = 7,

@@ -134,3 +134,12 @@ kbd { font: inherit; color: #e6dfca; }
 @media (orientation: landscape) and (max-height: 560px) {
   .is-touch .sneak-control { left: 50%; bottom: calc(var(--safe-bottom) + 96px); transform: translateX(-50%); }
 }
+.skin-label { display: block; text-align: left; margin: 16px 0 8px; font-size: 12px; color: var(--muted); }
+#dev-open { margin-top: 16px; min-height: 44px; padding: 8px 16px; color: #d6bd8a; background: transparent; }
+.dev-panel { margin-top: 12px; border: 1px dashed #907548; padding: 16px; text-align: left; display: grid; gap: 10px; font-size: 12px; }
+.dev-panel p { line-height: 1.6; margin: 0; color: var(--muted); }
+.dev-panel label { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.dev-panel input[type="number"] { width: 100%; min-height: 44px; background: #10171a; color: var(--paper); border: 1px solid #63706b; padding: 8px; }
+.dev-panel input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--gold); }
+.dev-panel button { font-size: 12px; padding: 10px; }
+#dev-reset-confirm { display: grid; gap: 10px; border-top: 1px solid #907548; padding-top: 10px; }

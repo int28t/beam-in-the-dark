@@ -1,7 +1,7 @@
-import { test, assert, near } from './harness.js';
-import { parseMap } from '../map.js';
-import { createEnemy } from '../enemy.js';
-import { getMonsterType } from '../monster-types.js';
+import { test, assert, near } from './harness.js?v=0.13.0';
+import { parseMap } from '../map.js?v=0.13.0';
+import { createEnemy } from '../enemy.js?v=0.13.0';
+import { getMonsterType } from '../monster-types.js?v=0.13.0';
 const corner = parseMap(['#######', '#P.#..#', '#..#..#', '#.....#', '#######']);
 const open = parseMap([
   '#############',

@@ -1,8 +1,8 @@
-import { decorateFloor } from './floor-theme.js';
-import { BIOMES } from './biomes.js';
-import { MONSTER_TYPES } from './monster-types.js';
-import { parseMap, FLOOR_TEMPLATE, CELL_SIZE } from './map.js';
-import { cellIndex, cellPoint, distancesFrom, findPath } from './navigation.js';
+import { decorateFloor } from './floor-theme.js?v=0.13.0';
+import { BIOMES } from './biomes.js?v=0.13.0';
+import { MONSTER_TYPES } from './monster-types.js?v=0.13.0';
+import { parseMap, FLOOR_TEMPLATE, CELL_SIZE } from './map.js?v=0.13.0';
+import { cellIndex, cellPoint, distancesFrom, findPath } from './navigation.js?v=0.13.0';
 
 // Every template preserves the central cross and its four possible doorway ports.
 export const ROOM_TEMPLATES = [

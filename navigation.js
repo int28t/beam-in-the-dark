@@ -1,4 +1,4 @@
-import { CELL_SIZE } from './map.js';
+import { CELL_SIZE } from './map.js?v=0.13.0';
 
 export function inCone(origin, direction, target, range, cosine) {
   const x = target.x - origin.x,

@@ -1,7 +1,7 @@
-import { test, assert } from './harness.js';
-import { getDifficulty } from '../difficulty.js';
-import { generateFloor } from '../generator.js';
-import { PLAYER } from '../config.js';
+import { test, assert } from './harness.js?v=0.13.0';
+import { getDifficulty } from '../difficulty.js?v=0.13.0';
+import { generateFloor } from '../generator.js?v=0.13.0';
+import { PLAYER } from '../config.js?v=0.13.0';
 test('Сложность: ранний этаж мягче предельного, параметры ограничены', () => {
   const early = getDifficulty(1),
     late = getDifficulty(1000000000);

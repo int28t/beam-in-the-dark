@@ -1,7 +1,7 @@
-import { test, assert } from './harness.js';
-import { generateFloor, validateFloor, ROOM_TEMPLATES } from '../generator.js';
-import { getDifficulty } from '../difficulty.js';
-import { cellIndex, distancesFrom } from '../navigation.js';
+import { test, assert } from './harness.js?v=0.13.0';
+import { generateFloor, validateFloor, ROOM_TEMPLATES } from '../generator.js?v=0.13.0';
+import { getDifficulty } from '../difficulty.js?v=0.13.0';
+import { cellIndex, distancesFrom } from '../navigation.js?v=0.13.0';
 test('Генерация: одинаковые seed и этаж дают одинаковые карты и размещения', () => {
   const a = generateFloor({ seed: 142, floor: 2 }),
     b = generateFloor({ seed: 142, floor: 2 });

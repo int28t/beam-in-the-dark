@@ -1,21 +1,23 @@
 import * as THREE from 'three';
 import nipplejs from 'nipplejs';
-import { createPlayer } from './entities.js';
-import { createInput } from './input.js';
-import { getDifficulty } from './difficulty.js';
-import { generateFloor } from './generator.js';
-import { createMapView } from './map-view.js';
-import { VERSION } from './config.js';
-import { getBiome } from './biomes.js';
-import { createWorld } from './world.js';
-import { createEnemyView } from './enemy-view.js';
-import { createGame } from './game.js';
-import { createUI } from './ui.js';
-import { loadProgress, saveProgress } from './storage.js';
-import { createAudio } from './audio.js';
-import { createPlatform } from './platform.js';
-import { applyQuality } from './quality.js';
-import { createFrameMeter } from './frame-meter.js';
+import { createPlayer } from './entities.js?v=0.13.0';
+import { createInput } from './input.js?v=0.13.0';
+import { getDifficulty } from './difficulty.js?v=0.13.0';
+import { generateFloor } from './generator.js?v=0.13.0';
+import { createMapView } from './map-view.js?v=0.13.0';
+import { VERSION } from './config.js?v=0.13.0';
+import { getBiome } from './biomes.js?v=0.13.0';
+import { createWorld } from './world.js?v=0.13.0';
+import { createEnemyView } from './enemy-view.js?v=0.13.0';
+import { createGame } from './game.js?v=0.13.0';
+import { createUI } from './ui.js?v=0.13.0';
+import { createSaveStore } from './cloud-save.js?v=0.13.0';
+import { createDebug } from './debug.js?v=0.13.0';
+import { SKINS, earnedSkins } from './skins.js?v=0.13.0';
+import { createAudio } from './audio.js?v=0.13.0';
+import { createPlatform } from './platform.js?v=0.13.0';
+import { applyQuality } from './quality.js?v=0.13.0';
+import { createFrameMeter } from './frame-meter.js?v=0.13.0';
 
 export function start() {
   const container = document.querySelector('#scene');
@@ -60,7 +62,28 @@ export function start() {
       ? Number(requestedSeed) >>> 0
       : randomSeed();
   const game = createGame();
-  const progress = loadProgress();
+  const saves = createSaveStore({
+    onChange: () => applyProgress(),
+    onStatus: (info) => ui.setSaveStatus(info),
+  });
+  const progress = saves.value;
+  let appliedAimMode = progress.touchAim;
+  const debug = createDebug({
+    game,
+    onChange: () => sync(),
+    onTeleport: () => sync(),
+    onUnlock: () =>
+      saves.update({
+        skins: { unlocked: [...new Set([...progress.skins.unlocked, ...Object.keys(SKINS)])] },
+      }),
+    onReset: () => {
+      if (saves.reset() === false) return false;
+      runSeed = randomSeed();
+      game.dispatch('newRun');
+      game.dispatch('pause');
+      sync();
+    },
+  });
   const frameMeter = createFrameMeter();
   const audio = createAudio();
   audio.setMuted(progress.muted);
@@ -68,8 +91,11 @@ export function start() {
   const ui = createUI((action, value) => act(action, value), {
     touch,
     tutorialSeen: progress.tutorialSeen,
+    debug,
   });
   ui.setProgress(progress);
+  ui.setSaveStatus(saves.info);
+  player.setSkin(progress.skins.selected);
   const input = createInput(container, {
     joystickZone: document.querySelector('#joystick'),
     aimZone: document.querySelector('#aim-joystick'),
@@ -90,7 +116,9 @@ export function start() {
   const platform = createPlatform({
     onInactive: () => pause(),
     onLayout: (info) => {
+      saves.connect(window.Telegram?.WebApp);
       ui.setPlatform(info);
+      ui.render(game.state);
       updateGraphics();
     },
   });
@@ -103,6 +131,16 @@ export function start() {
   let disposed = false;
   let wasThreat = false;
 
+  function applyProgress() {
+    audio.setMuted(progress.muted);
+    ui.setProgress(progress);
+    player.setSkin(progress.skins.selected);
+    if (appliedAimMode !== progress.touchAim) {
+      appliedAimMode = progress.touchAim;
+      input.setAimMode(appliedAimMode);
+    }
+    updateGraphics();
+  }
   function resetWorld() {
     mapView?.dispose();
     enemyViews.forEach((view) => view.dispose());
@@ -171,6 +209,13 @@ export function start() {
     resize();
   }
   function act(action, value) {
+    if (action === 'debug') return debug.execute(value.action, value.value);
+    if (action === 'setSkin') {
+      if (Object.hasOwn(SKINS, value) && progress.skins.unlocked.includes(value))
+        saves.update({ skins: { selected: value } });
+      return;
+    }
+    if (['start', 'resume'].includes(action)) void saves.flush();
     if (action === 'toggleSneak') {
       input.toggleSneak();
       return;
@@ -180,33 +225,23 @@ export function start() {
       return;
     }
     if (action === 'setQuality' && ['auto', 'low', 'normal'].includes(value)) {
-      progress.quality = value;
-      saveProgress(undefined, progress);
-      ui.setProgress(progress);
-      updateGraphics();
+      saves.update({ quality: value });
       return;
     }
     if (action === 'setTouchAim' && ['movement', 'dual'].includes(value)) {
-      progress.touchAim = value;
-      saveProgress(undefined, progress);
-      ui.setProgress(progress);
-      input.setAimMode(value);
+      saves.update({ touchAim: value });
       return;
     }
     if (action === 'toggleMute') {
-      progress.muted = !progress.muted;
-      audio.setMuted(progress.muted);
+      saves.update({ muted: !progress.muted });
       if (!progress.muted) void audio.unlock();
-      saveProgress(undefined, progress);
-      ui.setProgress(progress);
       return;
     }
     if (['start', 'resume', 'restart', 'next', 'newRun', 'toggleLight'].includes(action))
       void audio.unlock();
     if (action === 'newRun' && game.state.phase !== 'playing') runSeed = randomSeed();
     if (action === 'start' && !progress.tutorialSeen) {
-      progress.tutorialSeen = true;
-      saveProgress(undefined, progress);
+      saves.update({ tutorialSeen: true });
     }
     const lightWasOn = game.state.lightOn;
     game.dispatch(action);
@@ -269,6 +304,8 @@ export function start() {
           controls.aimZ = aimPoint.z - player.root.position.z;
         }
       }
+      if (!debug.available && (game.state.cheats.invincible || game.state.cheats.infiniteLight))
+        game.setDebug({ invincible: false, infiniteLight: false });
       const feedback = world.step(dt, controls, game);
       player.root.position.set(world.position.x, 0, world.position.z);
       player.update(time, feedback.walking, world.aim.x, world.aim.z);
@@ -290,10 +327,15 @@ export function start() {
       }
       if (feedback.completed) {
         audio.play('complete');
-        if (game.state.streak > progress.best) {
-          progress.best = game.state.streak;
-          saveProgress(undefined, progress);
-          ui.setProgress(progress);
+        if (!game.state.practice && game.state.streak > progress.best) {
+          saves.update({
+            best: game.state.streak,
+            skins: {
+              unlocked: [
+                ...new Set([...progress.skins.unlocked, ...earnedSkins(game.state.streak)]),
+              ],
+            },
+          });
         }
       }
       ui.render(game.state, feedback);
@@ -314,6 +356,7 @@ export function start() {
     disposed = true;
     cancelAnimationFrame(animation);
     events.abort();
+    saves.dispose();
     platform.dispose();
     audio.dispose();
     input.dispose();

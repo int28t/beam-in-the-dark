@@ -1,5 +1,5 @@
-import { getFloorBiome } from './biomes.js';
-import { getAvailableMonsterTypes } from './monster-types.js';
+import { getFloorBiome } from './biomes.js?v=0.13.0';
+import { getAvailableMonsterTypes } from './monster-types.js?v=0.13.0';
 
 // A separate deterministic stream keeps existing room geometry and placements unchanged.
 export function decorateFloor(map, { seed = map.seed ?? 1, floor = map.floor ?? 1 } = {}) {

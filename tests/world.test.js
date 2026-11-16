@@ -1,7 +1,7 @@
-import { test, assert, near } from './harness.js';
-import { createGame } from '../game.js';
-import { createWorld } from '../world.js';
-import { parseMap } from '../map.js';
+import { test, assert, near } from './harness.js?v=0.13.0';
+import { createGame } from '../game.js?v=0.13.0';
+import { createWorld } from '../world.js?v=0.13.0';
+import { parseMap } from '../map.js?v=0.13.0';
 const controls = { moveX: 0, moveZ: 0, aimX: 1, aimZ: 0 };
 test('Фонарик: расход, выключение и нулевой заряд ограничены диапазоном', () => {
   const game = createGame();

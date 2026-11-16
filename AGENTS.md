@@ -76,3 +76,17 @@ Keep modules focused. Extract a subsystem such as input, audio, UI, collision, o
   - Operation outside Telegram and storage failure handling.
 - Add focused automated checks for algorithmic behavior such as generation reachability or collision edge cases when useful. Keep visual and interaction checks in the browser.
 - Report what changed, what was actually verified, and any remaining limitations. Distinguish desktop touch emulation from testing on a real mobile device. Never claim a check passed if it was not run.
+
+
+## Pure logic, views and adapters
+- Pure logic (`game.js`, `world.js`, `enemy.js`, `enemy-senses.js`, `map.js`, `generator.js`, `navigation.js`, `collision.js`, `level-art.js`, catalogues) must not import Three.js, access DOM, or call Telegram. Pass inputs/dependencies explicitly.
+- Views (`*-view.js`, `level-architecture.js`, `entities.js`, `guard-lantern.js`) own Three.js resources and expose update/dispose; keep gameplay decisions in pure modules. UI modules own DOM listeners with cleanup. `main.js` coordinates one loop.
+- `storage.js` owns schema/defaults/validation/merge and guarded local persistence; `cloud-save.js` is the asynchronous Telegram CloudStorage adapter. Do not overwrite unsupported newer schemas. Preserve unknown fields of supported schemas, scope local Telegram data by account, and merge reads before cloud writes. CloudStorage provides no transactional cross-device compare-and-swap.
+- `debug.js` gates DEV commands to exact local development hosts or numeric ADMIN_TG_ID in Telegram. It is a client-side debug gate, not server authorization. Never put bot tokens or private credentials in the client. Recheck eligibility for each action; never count cheat-assisted runs toward best/unlocks.
+
+## Required checks and release versions
+- **After every feature, run `node tests/run.js` and fix failures before proceeding.** Tests must exercise pure logic/adapters without requiring a browser or npm.
+- For changes to Three.js objects, also run the checks in `tests/scene-tests.html` or the equivalent Node loader against the exact pinned Three.js version. CPU checks do not establish WebGL appearance/FPS or real-device behavior.
+- Before each push that changes runtime code, bump `VERSION` in `config.js`, run `node scripts/release.mjs --prepare`, run the logic tests, then `node scripts/release.mjs --check` and commit. Entry, all relative module imports, CSS and test pages must use that release query. Do not change CDN dependency versions as part of this step.
+- Enable tracked hooks once per checkout: `git config core.hooksPath .githooks`. The pre-push hook checks release consistency, rejects unchanged release versions for changed runtime code, and runs the logic suite. Hooks do not push, commit, or modify files themselves.
+- Do not promise an already open Telegram window updates in place. Reopen/reload after deployment and verify the displayed version; versioned module URLs cannot force a cached old HTML page to refresh.

@@ -1,8 +1,8 @@
-import { test, assert, near } from './harness.js';
-import { parseMap } from '../map.js';
-import { hasLineOfSight, findPath, inCone } from '../navigation.js';
-import { createEllipseCollider } from '../collision.js';
-import { createEnemy } from '../enemy.js';
+import { test, assert, near } from './harness.js?v=0.13.0';
+import { parseMap } from '../map.js?v=0.13.0';
+import { hasLineOfSight, findPath, inCone } from '../navigation.js?v=0.13.0';
+import { createEllipseCollider } from '../collision.js?v=0.13.0';
+import { createEnemy } from '../enemy.js?v=0.13.0';
 const map = parseMap(['#######', '#P.#..#', '#..#..#', '#.....#', '#######']);
 test('Видимость: стена перекрывает взгляд и свет, проход не перекрывает', () => {
   assert(!hasLineOfSight({ x: 1.5, z: 1.5 }, { x: 7.5, z: 1.5 }, map));

@@ -1,5 +1,7 @@
-import { bindActionButton } from './input.js';
-import { VERSION } from './config.js';
+import { bindActionButton } from './input.js?v=0.13.0';
+import { VERSION } from './config.js?v=0.13.0';
+import { SKINS } from './skins.js?v=0.13.0';
+import { createDebugView } from './debug-view.js?v=0.13.0';
 const PANELS = {
   menu: {
     caption: 'За порогом света',
@@ -43,7 +45,7 @@ const PANELS = {
   },
 };
 
-export function createUI(onAction, { touch, tutorialSeen = false }) {
+export function createUI(onAction, { touch, tutorialSeen = false, debug }) {
   const app = document.querySelector('#app');
   app.classList.toggle('is-touch', touch);
   const overlay = document.querySelector('#overlay');
@@ -75,6 +77,9 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
   let lastBattery = -1,
     lastLight;
   const events = new AbortController();
+  const dev = createDebugView((action, value) => onAction('debug', { action, value }));
+  const skin = document.querySelector('#skin');
+  skin.addEventListener('change', () => onAction('setSkin', skin.value), { signal: events.signal });
   quality.addEventListener('change', () => onAction('setQuality', quality.value), {
     signal: events.signal,
   });
@@ -129,6 +134,16 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
   return {
     setProgress(progress) {
       best.textContent = String(progress.best);
+      skin.replaceChildren(
+        ...Object.entries(SKINS).map(([id, item]) => {
+          const option = document.createElement('option');
+          option.value = id;
+          option.disabled = !progress.skins.unlocked.includes(id);
+          option.textContent = item.name + (option.disabled ? ` · серия ${item.requiredBest}` : '');
+          return option;
+        }),
+      );
+      skin.value = progress.skins.selected;
       mute.setAttribute('aria-pressed', String(progress.muted));
       mute.textContent =
         (progress.muted ? 'Звук выключен' : 'Звук включён') + (touch ? '' : ' · M');
@@ -145,6 +160,22 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
           text + ' Круглая кнопка — фонарь. «Тихий шаг» уменьшает скорость и шум. Пауза — вверху.';
         document.querySelector('#controls-hint').textContent = text;
       }
+    },
+    setSaveStatus({ status, localSaved = true }) {
+      document.querySelector('#save-status').textContent =
+        status === 'readonly'
+          ? 'Сохранение создано более новой версией — обновите игру.'
+          : status === 'synced'
+            ? 'Синхронизировано с Telegram'
+            : status === 'syncing'
+              ? 'Синхронизация с Telegram…'
+              : status === 'offline'
+                ? localSaved
+                  ? 'Облако недоступно. Прогресс сохранён на устройстве.'
+                  : 'Сохранение временно недоступно. Не закрывайте игру.'
+                : localSaved
+                  ? 'Сохранено на устройстве'
+                  : 'Сохранение на устройстве недоступно в этом окне.';
     },
     setFrameRate(fps) {
       document.querySelector('#performance-note').textContent = `Последний замер: ${fps} кадров/с`;
@@ -176,6 +207,8 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
       } = {},
     ) {
       const playing = state.phase === 'playing';
+      dev.render(state, debug?.available ?? false);
+      document.querySelector('#practice-note').hidden = !state.practice;
       if (state.streak !== lastStreak) {
         streak.textContent = String(state.streak);
         lastStreak = state.streak;
@@ -258,6 +291,7 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
       lastPhase = state.phase;
     },
     dispose() {
+      dev.dispose();
       events.abort();
     },
   };

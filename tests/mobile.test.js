@@ -1,9 +1,9 @@
-import { createFrameMeter } from '../frame-meter.js';
-import { test, assert, near } from './harness.js';
-import { createInputState, createInput, bindActionButton } from '../input.js';
-import { createPlatform } from '../platform.js';
-import { getQualityProfile, applyQuality } from '../quality.js';
-import { loadProgress, saveProgress } from '../storage.js';
+import { createFrameMeter } from '../frame-meter.js?v=0.13.0';
+import { test, assert, near } from './harness.js?v=0.13.0';
+import { createInputState, createInput, bindActionButton } from '../input.js?v=0.13.0';
+import { createPlatform } from '../platform.js?v=0.13.0';
+import { getQualityProfile, applyQuality } from '../quality.js?v=0.13.0';
+import { loadProgress, saveProgress } from '../storage.js?v=0.13.0';
 
 function hostFixture(app) {
   const host = new EventTarget(),
