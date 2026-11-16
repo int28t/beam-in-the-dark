@@ -7,6 +7,7 @@ import { FLOOR_TEMPLATE } from '../map.js';
 import { test, assert, near, throws, runTests } from './harness.js';
 import './enemy.test.js';
 import './world.test.js';
+import './generator.test.js';
 
 test('Парсер: координаты, непроходимые стены и точки появления', () => {
   const map = parseMap(['#####', '#P.K#', '#..D#', '#####']);

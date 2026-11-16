@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import nipplejs from 'nipplejs';
 import { createPlayer } from './entities.js';
 import { createInput } from './input.js';
-import { parseMap, FLOOR_TEMPLATE } from './map.js';
+import { generateFloor } from './generator.js';
 import { createMapView } from './map-view.js';
 import { VERSION } from './config.js';
 import { createWorld } from './world.js';
@@ -42,6 +42,9 @@ export function start() {
   const mouse = new THREE.Vector2();
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const aimPoint = new THREE.Vector3();
+  const requestedSeed=new URLSearchParams(location.search).get('seed');
+  const randomSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
+  let runSeed=requestedSeed!==null&&/^\d{1,10}$/.test(requestedSeed)?Number(requestedSeed)>>>0:randomSeed();
   const game = createGame();
   const touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
   const ui = createUI(action => act(action), { touch });
@@ -60,7 +63,8 @@ export function start() {
 
   function resetWorld() {
     mapView?.dispose();enemyViews.forEach(view=>view.dispose());
-    map=parseMap(FLOOR_TEMPLATE);
+    map=generateFloor({seed:runSeed,floor:game.state.floor});
+    ui.setFloorCode(map.seed,map.floor);
     world=createWorld(map);mapView=createMapView(map);scene.add(mapView.root);
     enemyViews=world.enemies.map(()=>{const view=createEnemyView();scene.add(view.root);return view;});
     player.root.position.set(world.position.x,0,world.position.z);
@@ -87,7 +91,7 @@ export function start() {
     mapView.update(time, game.state.hasKey,world.collected);
     player.light.visible=game.state.lightOn;
   }
-  function act(action) { game.dispatch(action); sync(); }
+  function act(action) { if(action==='newRun'&&game.state.phase!=='playing')runSeed=randomSeed();game.dispatch(action);sync(); }
   function pause() { if (game.state.phase === 'playing') act('pause'); else input.reset(); }
   function resize() {
     const width = Math.max(1, container.clientWidth);

@@ -63,6 +63,7 @@ export function createUI(onAction, { touch }) {
     ? 'Джойстик — движение и направление света'
     : '<kbd>W A S D</kbd> / стрелки — движение　 Мышь — свет　 <kbd>F</kbd> — фонарь　 <kbd>Esc</kbd> — пауза';
   return {
+    setFloorCode(seed,floor){document.querySelector('#floor-code').textContent=`Код этажа: ${seed}:${floor}`;},
     render(state, { nearLockedExit = false,threat=false,lightHit=false } = {}) {
       const playing = state.phase === 'playing';
       pause.hidden = !playing;
