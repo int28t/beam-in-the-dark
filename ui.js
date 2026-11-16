@@ -43,6 +43,8 @@ const PANELS = {
 };
 
 export function createUI(onAction, { touch, tutorialSeen = false }) {
+  const app = document.querySelector('#app');
+  app.classList.toggle('is-touch', touch);
   const overlay = document.querySelector('#overlay');
   const panel = overlay.querySelector('.panel');
   const actions = document.querySelector('#panel-actions');
@@ -55,6 +57,13 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
   const batteryFill = document.querySelector('#battery-fill');
   const batteryValue = document.querySelector('#battery-value');
   const danger = document.querySelector('#danger');
+  const quality = document.querySelector('#quality');
+  const touchAim = document.querySelector('#touch-aim');
+  const aimControl = document.querySelector('#aim-control');
+  const fullscreen = document.querySelector('#fullscreen');
+  const fullscreenNote = document.querySelector('#fullscreen-note');
+  document.querySelector('#aim-label').hidden = !touch;
+  touchAim.hidden = !touch;
   const instructions = document.querySelector('#instructions');
   instructions.open = !tutorialSeen;
   const mute = document.querySelector('#mute');
@@ -64,6 +73,15 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
   let lastBattery = -1,
     lastLight;
   const events = new AbortController();
+  quality.addEventListener('change', () => onAction('setQuality', quality.value), {
+    signal: events.signal,
+  });
+  touchAim.addEventListener('change', () => onAction('setTouchAim', touchAim.value), {
+    signal: events.signal,
+  });
+  fullscreen.addEventListener('click', () => onAction('toggleFullscreen'), {
+    signal: events.signal,
+  });
   mute.addEventListener('click', () => onAction('toggleMute'), { signal: events.signal });
   flashlight.addEventListener('click', () => onAction('toggleLight'), { signal: events.signal });
   let lastPhase;
@@ -109,7 +127,30 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
     setProgress(progress) {
       best.textContent = String(progress.best);
       mute.setAttribute('aria-pressed', String(progress.muted));
-      mute.textContent = progress.muted ? 'Звук выключен · M' : 'Звук включён · M';
+      mute.textContent =
+        (progress.muted ? 'Звук выключен' : 'Звук включён') + (touch ? '' : ' · M');
+      quality.value = progress.quality;
+      touchAim.value = progress.touchAim;
+      app.dataset.aimMode = progress.touchAim;
+      aimControl.hidden = !touch || progress.touchAim !== 'dual';
+      if (touch) {
+        const text =
+          progress.touchAim === 'dual'
+            ? 'Левый джойстик — движение, правый — свет. Направление света сохраняется после отпускания.'
+            : 'Левый джойстик — движение и направление света. После остановки направление сохраняется.';
+        document.querySelector('#control-instructions').textContent =
+          text + ' Круглая кнопка включает и выключает фонарь. Пауза — кнопка вверху.';
+        document.querySelector('#controls-hint').textContent = text;
+      }
+    },
+    setFrameRate(fps) {
+      document.querySelector('#performance-note').textContent = `Последний замер: ${fps} кадров/с`;
+    },
+    setPlatform(info) {
+      fullscreen.hidden = !info.fullscreenAvailable;
+      fullscreen.textContent = info.isFullscreen ? 'Выйти из полного экрана' : 'На весь экран';
+      fullscreenNote.textContent = info.fullscreenError;
+      fullscreenNote.hidden = !info.fullscreenError;
     },
     setFloorCode(seed, floor) {
       document.querySelector('#floor-code').textContent = `Код этажа: ${seed}:${floor}`;

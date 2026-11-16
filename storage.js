@@ -1,5 +1,12 @@
 const STORAGE_KEY = 'beam-in-the-dark:progress';
-const defaults = () => ({ version: 1, best: 0, muted: false, tutorialSeen: false });
+const defaults = () => ({
+  version: 1,
+  best: 0,
+  muted: false,
+  tutorialSeen: false,
+  quality: 'auto',
+  touchAim: 'movement',
+});
 function normalize(value) {
   const result = defaults();
   if (!value || typeof value !== 'object' || Array.isArray(value) || value.version !== 1)
@@ -7,6 +14,8 @@ function normalize(value) {
   if (Number.isSafeInteger(value.best) && value.best >= 0) result.best = value.best;
   if (typeof value.muted === 'boolean') result.muted = value.muted;
   if (typeof value.tutorialSeen === 'boolean') result.tutorialSeen = value.tutorialSeen;
+  if (['auto', 'low', 'normal'].includes(value.quality)) result.quality = value.quality;
+  if (['movement', 'dual'].includes(value.touchAim)) result.touchAim = value.touchAim;
   return result;
 }
 function getStorage(storage) {

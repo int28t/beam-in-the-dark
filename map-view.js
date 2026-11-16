@@ -103,6 +103,8 @@ export function createMapView(map) {
   exitLight.position.set(0, 1.4, -0.4);
   exit.add(exitLight);
   // Landmarks stand inside existing wall cells; decorative geometry adds no hidden obstacles.
+  const decor = new THREE.Group();
+  root.add(decor);
   const rooms = map.rooms ?? [];
   if (rooms.length) {
     const pillars = instances(
@@ -110,6 +112,7 @@ export function createMapView(map) {
       new THREE.MeshStandardMaterial({ color: 0x384951, roughness: 0.9 }),
       rooms.length * 4,
     );
+    decor.add(pillars);
     pillars.castShadow = true;
     let n = 0;
     for (const room of rooms) {
@@ -137,6 +140,7 @@ export function createMapView(map) {
       }),
       rooms.length,
     );
+    decor.add(markers);
     for (let i = 0; i < rooms.length; i++) {
       const room = rooms[i];
       matrix.makeRotationX(-Math.PI / 2);
@@ -157,6 +161,9 @@ export function createMapView(map) {
   const emptyCollected = new Set();
   return {
     root,
+    setQuality(visible) {
+      decor.visible = visible;
+    },
     update(time, hasKey, collected = emptyCollected) {
       for (const battery of batteryViews) battery.group.visible = !collected.has(battery.id);
       key.visible = !hasKey;

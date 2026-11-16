@@ -11,6 +11,7 @@ import './generator.test.js';
 import './difficulty.test.js';
 import './progress.test.js';
 import './integration.test.js';
+import './mobile.test.js';
 
 test('Парсер: координаты, непроходимые стены и точки появления', () => {
   const map = parseMap(['#####', '#P.K#', '#..D#', '#####']);

@@ -8,6 +8,7 @@
   <title>Beam in the Dark</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="./style.css">
+  <script id="telegram-sdk" src="https://telegram.org/js/telegram-web-app.js?65" async></script>
   <script type="importmap">
     {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","nipplejs":"https://cdn.jsdelivr.net/npm/nipplejs@1.0.4/dist/index.mjs"}}
   </script>
@@ -17,11 +18,11 @@
     <div id="scene" aria-label="Игровой мир"></div>
     <div class="vignette" aria-hidden="true"></div>
     <header class="hud">
-      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.8.0</small></div></div>
+      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.9.0</small></div></div>
       <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
     </header>
     <div class="records"><span>Серия без поражений: <b id="streak">0</b></span><span>Рекорд: <b id="best">0</b></span></div>
-    <div class="equipment"><button id="flashlight" type="button" aria-pressed="true">Фонарь <kbd>F</kbd></button><div id="battery-meter" role="meter" aria-label="Заряд фонаря" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="battery-fill"></div></div><span id="battery-value">100%</span></div>
+    <button class="flashlight-control" id="flashlight" type="button" aria-pressed="true" aria-label="Включить или выключить фонарь">Фонарь <kbd>F</kbd></button><div class="equipment"><div id="battery-meter" role="meter" aria-label="Заряд фонаря" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="battery-fill"></div></div><span id="battery-value">100%</span></div>
     <div id="danger" class="danger" role="status" hidden>Вас преследуют</div>
     <div class="objective" id="objective" role="status">Свет покажет дорогу</div>
     <div id="overlay" class="overlay">
@@ -32,16 +33,26 @@
         <p id="panel-description">Подготавливаем свет и тени…</p>
         <div id="panel-actions" class="panel-actions"></div>
         <div class="sound-settings"><button id="mute" type="button" aria-pressed="false">Звук включён · M</button></div>
+        <div class="game-settings">
+          <label for="quality">Качество</label><select id="quality"><option value="auto">Авто</option><option value="low">Экономное</option><option value="normal">Обычное</option></select>
+          <label id="aim-label" for="touch-aim">Прицеливание</label><select id="touch-aim"><option value="movement">По движению</option><option value="dual">Правый джойстик</option></select>
+        </div>
+        <p id="performance-note" class="panel-footnote">Замер FPS появится после начала игры.</p>
+        <button id="fullscreen" type="button" hidden>На весь экран</button>
+        <p id="fullscreen-note" class="panel-footnote" role="status" hidden></p>
         <details id="instructions" class="instructions" open>
           <summary>Как играть</summary>
-          <p>WASD / стрелки — движение. Мышь — направление света. F — включить или выключить фонарь. M — звук. Esc — пауза.</p>
+          <p id="control-instructions">WASD / стрелки — движение. Мышь — направление света. F — включить или выключить фонарь. M — звук. Esc — пауза.</p>
           <p>Найдите золотой ключ и бирюзовую дверь. Стены скрывают вас от тени. Свет замедляет её, но быстрее тратит заряд. Батарейки пополняют фонарь; при нуле остаётся только слабый ореол.</p>
         </details>
         <p id="floor-code" class="panel-footnote"></p>
         <p class="panel-footnote" id="panel-note">Тёмный замок. Один луч света.</p>
       </section>
     </div>
-    <div class="touch-controls" id="touch-controls" hidden><div id="joystick" aria-label="Джойстик движения"></div><span>Двигайтесь к свету</span></div>
+    <div class="touch-controls" id="touch-controls" hidden>
+      <div class="stick-control move-control"><div id="joystick" class="joystick-zone" aria-label="Джойстик движения"></div><span>Движение</span></div>
+      <div class="stick-control aim-control" id="aim-control" hidden><div id="aim-joystick" class="joystick-zone" aria-label="Джойстик направления света"></div><span>Направление света</span></div>
+    </div>
     <footer class="controls-hint" id="controls-hint">Найдите дорогу сквозь темноту</footer>
     <p id="announcement" class="sr-only" aria-live="polite"></p>
     <section id="fatal-error" class="error-panel" role="alert" hidden><h1>Не удалось зажечь свет</h1><p id="error-message"></p><button onclick="location.reload()">Попробовать снова</button></section>

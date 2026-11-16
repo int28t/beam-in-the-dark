@@ -12,6 +12,9 @@ import { createGame } from './game.js';
 import { createUI } from './ui.js';
 import { loadProgress, saveProgress } from './storage.js';
 import { createAudio } from './audio.js';
+import { createPlatform } from './platform.js';
+import { applyQuality } from './quality.js';
+import { createFrameMeter } from './frame-meter.js';
 
 export function start() {
   const container = document.querySelector('#scene');
@@ -56,13 +59,20 @@ export function start() {
       : randomSeed();
   const game = createGame();
   const progress = loadProgress();
+  const frameMeter = createFrameMeter();
   const audio = createAudio();
   audio.setMuted(progress.muted);
   const touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-  const ui = createUI((action) => act(action), { touch, tutorialSeen: progress.tutorialSeen });
+  const ui = createUI((action, value) => act(action, value), {
+    touch,
+    tutorialSeen: progress.tutorialSeen,
+  });
   ui.setProgress(progress);
   const input = createInput(container, {
     joystickZone: document.querySelector('#joystick'),
+    aimZone: document.querySelector('#aim-joystick'),
+    touch,
+    aimMode: progress.touchAim,
     nipplejs,
     onToggle() {
       act('toggleLight');
@@ -75,6 +85,13 @@ export function start() {
       else if (game.state.phase === 'paused') act('resume');
     },
   });
+  const platform = createPlatform({
+    onInactive: () => pause(),
+    onLayout: (info) => {
+      ui.setPlatform(info);
+      updateGraphics();
+    },
+  });
   const events = new AbortController();
   let previous = null;
   let time = 0;
@@ -82,6 +99,7 @@ export function start() {
   let activePhase;
   let activeRevision = -1;
   let disposed = false;
+  let wasThreat = false;
 
   function resetWorld() {
     mapView?.dispose();
@@ -106,6 +124,8 @@ export function start() {
     camera.position.copy(cameraFocus).add(cameraOffset);
     camera.lookAt(cameraFocus);
     time = 0;
+    wasThreat = false;
+    updateGraphics();
     world.enemies.forEach((enemy, i) => enemyViews[i].update(enemy, 0));
   }
   function sync() {
@@ -119,13 +139,45 @@ export function start() {
     if (phaseChanged) {
       input.setEnabled(game.state.phase === 'playing');
       previous = null;
+      frameMeter.reset();
       activePhase = game.state.phase;
+      platform.setPlaying(activePhase === 'playing');
       if (activePhase !== 'playing') audio.pause();
     }
     mapView.update(time, game.state.hasKey, world.collected);
     player.light.visible = game.state.lightOn;
   }
-  function act(action) {
+  function updateGraphics() {
+    const profile = applyQuality({
+      renderer,
+      light: player.light,
+      mapView,
+      mode: progress.quality,
+      touch,
+      devicePixelRatio: window.devicePixelRatio,
+    });
+    document.querySelector('#app').classList.toggle('quality-low', profile.name === 'low');
+    resize();
+  }
+  function act(action, value) {
+    if (action === 'toggleFullscreen') {
+      platform.toggleFullscreen();
+      return;
+    }
+    if (action === 'setQuality' && ['auto', 'low', 'normal'].includes(value)) {
+      progress.quality = value;
+      saveProgress(undefined, progress);
+      ui.setProgress(progress);
+      updateGraphics();
+      return;
+    }
+    if (action === 'setTouchAim' && ['movement', 'dual'].includes(value)) {
+      progress.touchAim = value;
+      saveProgress(undefined, progress);
+      ui.setProgress(progress);
+      input.setAimMode(value);
+      return;
+    }
     if (action === 'toggleMute') {
       progress.muted = !progress.muted;
       audio.setMuted(progress.muted);
@@ -158,8 +210,9 @@ export function start() {
     camera.aspect = width / height;
     camera.fov = width < height ? 52 : 42;
     camera.updateProjectionMatrix();
+    input.reposition();
   }
-  window.addEventListener('resize', resize, { signal: events.signal });
+
   window.addEventListener('blur', pause, { signal: events.signal });
   document.addEventListener(
     'visibilitychange',
@@ -181,6 +234,7 @@ export function start() {
   );
   resize();
   sync();
+  platform.ready();
   document.querySelector('#version').textContent = `Версия ${VERSION}`;
 
   function animate(now) {
@@ -188,6 +242,8 @@ export function start() {
     const dt = previous === null ? 0 : Math.min((now - previous) / 1000, 0.05);
     previous = now;
     if (game.state.phase === 'playing') {
+      const fps = frameMeter.sample(now);
+      if (fps !== null) ui.setFrameRate(fps);
       time += dt;
       const controls = input.sample();
       if (controls.mouseAim) {
@@ -204,9 +260,17 @@ export function start() {
       for (let i = 0; i < world.enemies.length; i++) enemyViews[i].update(world.enemies[i], time);
       if (activePhase !== game.state.phase) sync();
       if (game.state.phase === 'playing') audio.update(dt, feedback);
-      if (feedback.keyPicked) audio.play('key');
+      if (feedback.keyPicked) {
+        audio.play('key');
+        platform.haptic('key');
+      }
+      if (feedback.threat && !wasThreat) platform.haptic('danger');
+      wasThreat = feedback.threat;
       if (feedback.batteriesPicked) audio.play('battery');
-      if (feedback.caught) audio.play('caught');
+      if (feedback.caught) {
+        audio.play('caught');
+        platform.haptic('caught');
+      }
       if (feedback.completed) {
         audio.play('complete');
         if (game.state.streak > progress.best) {
@@ -233,6 +297,7 @@ export function start() {
     disposed = true;
     cancelAnimationFrame(animation);
     events.abort();
+    platform.dispose();
     audio.dispose();
     input.dispose();
     ui.dispose();
