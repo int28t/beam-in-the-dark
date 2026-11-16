@@ -1,5 +1,6 @@
 import { test, assert } from './harness.js';
 import { generateFloor, validateFloor, ROOM_TEMPLATES } from '../generator.js';
+import { getDifficulty } from '../difficulty.js';
 import { cellIndex, distancesFrom } from '../navigation.js';
 test('Генерация: одинаковые seed и этаж дают одинаковые карты и размещения', () => {
   const a = generateFloor({ seed: 142, floor: 2 }),
@@ -10,7 +11,13 @@ test('Генерация: одинаковые seed и этаж дают оди�
 });
 test('Генерация: 1000 seeds связны, цели достижимы, предметы не пересекаются', () => {
   for (let seed = 0; seed < 1000; seed++) {
-    const map = generateFloor({ seed, floor: 1 + (seed % 20) });
+    const floor = 1 + (seed % 20);
+    const options = { seed, floor, difficulty: getDifficulty(floor) };
+    const map = generateFloor(options);
+    assert(
+      JSON.stringify(map) === JSON.stringify(generateFloor(options)),
+      `Seed ${seed}: недетерминированная генерация`,
+    );
     const result = validateFloor(map);
     assert(result.valid, `Seed ${seed}: ${result.errors.join(', ')}`);
     assert(map.rooms.length >= 4 && map.rooms.length <= 8);
