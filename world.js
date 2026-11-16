@@ -40,6 +40,7 @@ export function createWorld(map) {
     completed: false,
     lightHit: false,
     threat: false,
+    warning: false,
     walking: false,
     nearLockedExit: false,
   };
@@ -65,6 +66,7 @@ export function createWorld(map) {
       feedback.completed = false;
       feedback.lightHit = false;
       feedback.threat = false;
+      feedback.warning = false;
       feedback.walking = false;
       if (game.state.phase !== 'playing') return feedback;
       dt = Math.min(0.05, Math.max(0, dt));
@@ -85,9 +87,11 @@ export function createWorld(map) {
       for (const enemy of enemies) {
         enemy.update(dt, enemyWorld);
         feedback.lightHit ||= enemy.illuminated;
-        feedback.threat ||= enemy.phase === 'chase';
+        feedback.threat ||= enemy.isThreat;
+        feedback.warning ||= enemy.phase === 'windup';
         frame.caught ||=
-          Math.hypot(position.x - enemy.position.x, position.z - enemy.position.z) < 0.43;
+          Math.hypot(position.x - enemy.position.x, position.z - enemy.position.z) <
+          enemy.contactRadius;
       }
       const exitDistance = Math.hypot(position.x - exit.x, position.z - exit.z);
 

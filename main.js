@@ -6,6 +6,7 @@ import { getDifficulty } from './difficulty.js';
 import { generateFloor } from './generator.js';
 import { createMapView } from './map-view.js';
 import { VERSION } from './config.js';
+import { getBiome } from './biomes.js';
 import { createWorld } from './world.js';
 import { createEnemyView } from './enemy-view.js';
 import { createGame } from './game.js';
@@ -33,7 +34,8 @@ export function start() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x03070b);
   scene.fog = new THREE.FogExp2(0x03070b, 0.075);
-  scene.add(new THREE.HemisphereLight(0x9aafb6, 0x080b0d, 0.12));
+  const ambient = new THREE.HemisphereLight(0x9aafb6, 0x080b0d, 0.12);
+  scene.add(ambient);
   const moon = new THREE.DirectionalLight(0x8aa8bb, 0.08);
   moon.position.set(-5, 10, -2);
   scene.add(moon);
@@ -109,12 +111,21 @@ export function start() {
       floor: game.state.floor,
       difficulty: getDifficulty(game.state.floor),
     });
-    ui.setFloorCode(map.seed, map.floor);
+    const biome = getBiome(map.biome);
+    scene.background.setHex(biome.fog);
+    scene.fog.color.setHex(biome.fog);
+    scene.fog.density = biome.fogDensity;
+    ambient.color.setHex(biome.sky);
+    ambient.groundColor.setHex(biome.ground);
+    ambient.intensity = biome.ambient;
+    moon.color.setHex(biome.sky);
+    moon.intensity = biome.moon;
+    ui.setFloorCode(map.seed, map.floor, biome);
     world = createWorld(map);
     mapView = createMapView(map);
     scene.add(mapView.root);
-    enemyViews = world.enemies.map(() => {
-      const view = createEnemyView();
+    enemyViews = world.enemies.map((enemy) => {
+      const view = createEnemyView(enemy.type);
       scene.add(view.root);
       return view;
     });

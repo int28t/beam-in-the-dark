@@ -28,7 +28,7 @@
     <div id="scene" aria-label="Игровой мир"></div>
     <div class="vignette" aria-hidden="true"></div>
     <header class="hud">
-      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.9.0</small></div></div>
+      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.10.0</small><small id="biome-name">Глухая крепость</small></div></div>
       <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
     </header>
     <div class="records"><span>Серия без поражений: <b id="streak">0</b></span><span>Рекорд: <b id="best">0</b></span></div>
@@ -53,7 +53,10 @@
         <details id="instructions" class="instructions" open>
           <summary>Как играть</summary>
           <p id="control-instructions">WASD / стрелки — движение. Мышь — направление света. F — включить или выключить фонарь. M — звук. Esc — пауза.</p>
-          <p>Найдите золотой ключ и бирюзовую дверь. Стены скрывают вас от тени. Свет замедляет её, но быстрее тратит заряд. Батарейки пополняют фонарь; при нуле остаётся только слабый ореол.</p>
+          <p>Найдите золотой ключ и бирюзовую дверь. Стены скрывают вас от взгляда врагов. Свет замедляет их, но быстрее тратит заряд. Батарейки пополняют фонарь; при нуле остаётся только слабый ореол.</p>
+          <p><strong>Тень · с 1 этажа.</strong> Видит перед собой и слышит близкие шаги. Скройтесь за стеной и смените позицию.</p>
+          <p><strong>Слухач · с 3 этажа.</strong> Слепой, но слышит шаги за углом. Остановитесь — он пойдёт к месту последнего звука. Луч замедляет его.</p>
+          <p><strong>Ловчий · с 6 этажа.</strong> Янтарная вспышка предупреждает о прямом рывке. Уйдите в сторону или сорвите подготовку светом; после рывка он восстанавливается.</p>
         </details>
         <p id="floor-code" class="panel-footnote"></p>
         <p class="panel-footnote" id="panel-note">Тёмный замок. Один луч света.</p>

@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { CELL_SIZE } from './map.js';
+import { getBiome } from './biomes.js';
+import { createBiomeDecor } from './biome-view.js';
 
 export function createMapView(map) {
+  const biome = getBiome(map.biome);
   const root = new THREE.Group();
   const geometries = [];
   const materials = [];
@@ -17,7 +20,10 @@ export function createMapView(map) {
   }
   const floor = instances(
     new THREE.BoxGeometry(CELL_SIZE - 0.035, 0.12, CELL_SIZE - 0.035),
-    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.96 }),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: biome.id === 'flooded' ? 0.58 : 0.96,
+    }),
     map.width * map.height,
   );
   let index = 0;
@@ -25,8 +31,8 @@ export function createMapView(map) {
     for (let x = 0; x < map.width; x++) {
       matrix.makeTranslation(x * CELL_SIZE, -0.06, z * CELL_SIZE);
       floor.setMatrixAt(index, matrix);
-      const shade = 0.19 + ((x * 17 + z * 31) % 7) * 0.009;
-      color.setRGB(shade * 0.82, shade, shade * 1.05);
+      const shade = 0.88 + ((x * 17 + z * 31) % 7) * 0.025;
+      color.setHex(biome.floor).multiplyScalar(shade);
       floor.setColorAt(index++, color);
     }
   const walls = instances(
@@ -36,7 +42,7 @@ export function createMapView(map) {
   );
   const caps = instances(
     new THREE.BoxGeometry(CELL_SIZE + 0.045, 0.12, CELL_SIZE + 0.045),
-    new THREE.MeshStandardMaterial({ color: 0x506166, roughness: 0.87 }),
+    new THREE.MeshStandardMaterial({ color: biome.cap, roughness: 0.87 }),
     map.walls.length,
   );
   walls.castShadow = true;
@@ -46,8 +52,8 @@ export function createMapView(map) {
     const z = (wall.minZ + wall.maxZ) / 2;
     matrix.makeTranslation(x, 0.71, z);
     walls.setMatrixAt(i, matrix);
-    const shade = 0.13 + (i % 5) * 0.008;
-    color.setRGB(shade * 0.87, shade, shade * 1.08);
+    const shade = 0.9 + (i % 5) * 0.03;
+    color.setHex(biome.wall).multiplyScalar(shade);
     walls.setColorAt(i, color);
     matrix.makeTranslation(x, 1.45, z);
     caps.setMatrixAt(i, matrix);
@@ -102,54 +108,8 @@ export function createMapView(map) {
   const exitLight = new THREE.PointLight(0x5fc6bd, 5, 5, 2);
   exitLight.position.set(0, 1.4, -0.4);
   exit.add(exitLight);
-  // Landmarks stand inside existing wall cells; decorative geometry adds no hidden obstacles.
-  const decor = new THREE.Group();
-  root.add(decor);
-  const rooms = map.rooms ?? [];
-  if (rooms.length) {
-    const pillars = instances(
-      new THREE.CylinderGeometry(0.24, 0.31, 1.75, 6),
-      new THREE.MeshStandardMaterial({ color: 0x384951, roughness: 0.9 }),
-      rooms.length * 4,
-    );
-    decor.add(pillars);
-    pillars.castShadow = true;
-    let n = 0;
-    for (const room of rooms) {
-      for (const [dx, dz] of [
-        [0, 0],
-        [6, 0],
-        [0, 6],
-        [6, 6],
-      ]) {
-        matrix.makeTranslation(
-          (room.originX + dx) * CELL_SIZE,
-          0.875,
-          (room.originZ + dz) * CELL_SIZE,
-        );
-        pillars.setMatrixAt(n++, matrix);
-      }
-    }
-    const markers = instances(
-      new THREE.RingGeometry(0.35, 0.48, 8),
-      new THREE.MeshStandardMaterial({
-        color: 0x7a806f,
-        metalness: 0.5,
-        roughness: 0.65,
-        side: THREE.DoubleSide,
-      }),
-      rooms.length,
-    );
-    decor.add(markers);
-    for (let i = 0; i < rooms.length; i++) {
-      const room = rooms[i];
-      matrix.makeRotationX(-Math.PI / 2);
-      matrix.setPosition((room.originX + 3) * CELL_SIZE, 0.008, (room.originZ + 3) * CELL_SIZE);
-      markers.setMatrixAt(i, matrix);
-      color.setHex([0x7c8e8c, 0x9d8b6f, 0x747f9d, 0x8b747b][i % 4]);
-      markers.setColorAt(i, color);
-    }
-  }
+  const biomeDecor = createBiomeDecor(map, biome);
+  root.add(biomeDecor.root);
   const batteryViews = (map.batteries ?? []).map((battery) => {
     const group = new THREE.Group();
     group.position.set(battery.x, 0.4, battery.z);
@@ -162,7 +122,7 @@ export function createMapView(map) {
   return {
     root,
     setQuality(visible) {
-      decor.visible = visible;
+      biomeDecor.setQuality(visible);
     },
     update(time, hasKey, collected = emptyCollected) {
       for (const battery of batteryViews) battery.group.visible = !collected.has(battery.id);
@@ -173,6 +133,7 @@ export function createMapView(map) {
       exitLight.intensity = hasKey ? 8 : 5;
     },
     dispose() {
+      biomeDecor.dispose();
       root.removeFromParent();
       root.traverse((object) => {
         if (object.isInstancedMesh || object.isLight) object.dispose();
