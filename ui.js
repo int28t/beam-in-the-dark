@@ -1,0 +1,98 @@
+const PANELS = {
+  menu: {
+    caption: 'За порогом света', title: 'Beam in the Dark',
+    description: 'В заброшенном замке ещё горит один фонарь. Найдите золотой ключ и доберитесь до двери с бирюзовым светом.',
+    actions: [['start', 'Войти в замок']],
+    note: 'Пока замок пуст. Можно спокойно исследовать его комнаты.',
+  },
+  paused: {
+    caption: 'Свет подождёт', title: 'Пауза', description: 'Замок замер. Продолжайте с того места, где остановились, или начните этот этаж заново.',
+    actions: [['resume', 'Продолжить'], ['restart', 'Повторить этаж'], ['newRun', 'С первого этажа']],
+    note: 'Ключ и позиция сохраняются до продолжения.',
+  },
+  floorComplete: {
+    caption: 'Ещё одна дверь открыта', title: 'Выход найден', description: 'Золотой ключ подошёл к замку. За дверью — следующий этаж.',
+    actions: [['next', 'Следующий этаж'], ['restart', 'Повторить этаж']],
+    note: 'В версии 0.3.0 этажи используют одну готовую карту.',
+  },
+  gameOver: {
+    caption: 'Луч погас', title: 'Вас поймали', description: 'Попробуйте пройти этот этаж ещё раз.',
+    actions: [['restart', 'Повторить этаж'], ['newRun', 'С первого этажа']], note: '',
+  },
+};
+
+export function createUI(onAction, { touch }) {
+  const overlay = document.querySelector('#overlay');
+  const panel = overlay.querySelector('.panel');
+  const actions = document.querySelector('#panel-actions');
+  const pause = document.querySelector('#pause');
+  const objective = document.querySelector('#objective');
+  const touchControls = document.querySelector('#touch-controls');
+  const announcement = document.querySelector('#announcement');
+  const events = new AbortController();
+  let lastPhase;
+  let lastKey;
+  let lastFloor;
+  let lastMessage;
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-describedby', 'panel-description');
+  pause.addEventListener('click', () => onAction('pause'), { signal: events.signal });
+  actions.addEventListener('click', event => {
+    const button = event.target.closest('button[data-action]');
+    if (button) onAction(button.dataset.action);
+  }, { signal: events.signal });
+  overlay.addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const buttons = actions.querySelectorAll('button');
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === first) { last.focus(); event.preventDefault(); }
+    else if (!event.shiftKey && document.activeElement === last) { first.focus(); event.preventDefault(); }
+  }, { signal: events.signal });
+  document.querySelector('#version').textContent = 'Версия 0.3.0';
+  document.querySelector('#controls-hint').innerHTML = touch
+    ? 'Джойстик — движение и направление света'
+    : '<kbd>W A S D</kbd> / стрелки — движение　 Мышь — свет　 <kbd>Esc</kbd> — пауза';
+  return {
+    render(state, { nearLockedExit = false } = {}) {
+      const playing = state.phase === 'playing';
+      pause.hidden = !playing;
+      touchControls.hidden = !touch || !playing;
+      document.querySelector('#scene').setAttribute('aria-hidden', String(!playing));
+      const message = nearLockedExit && !state.hasKey ? 'Дверь заперта. Найдите золотой ключ.'
+        : state.hasKey ? 'Ключ найден. Ищите бирюзовую дверь.' : 'Найдите золотой ключ';
+      if (message !== lastMessage) { objective.textContent = message; lastMessage = message; }
+      if (state.hasKey !== lastKey) {
+        objective.classList.toggle('has-key', state.hasKey);
+        if (state.hasKey) announcement.textContent = 'Золотой ключ найден. Теперь можно открыть выход.';
+        lastKey = state.hasKey;
+      }
+      if (state.floor !== lastFloor) {
+        document.querySelector('#floor-number').textContent = String(state.floor).padStart(2, '0');
+        lastFloor = state.floor;
+      }
+      if (state.phase === lastPhase) return;
+      overlay.hidden = playing;
+      if (!playing) {
+        const content = PANELS[state.phase];
+        document.querySelector('#panel-caption').textContent = content.caption;
+        document.querySelector('#panel-title').textContent = content.title;
+        document.querySelector('#panel-description').textContent = content.description;
+        document.querySelector('#panel-note').textContent = content.note;
+        actions.replaceChildren(...content.actions.map(([action, label], index) => {
+          const button = document.createElement('button');
+          button.type = 'button'; button.dataset.action = action; button.textContent = label;
+          if (!index) button.className = 'primary';
+          return button;
+        }));
+        actions.querySelector('button').focus({ preventScroll: true });
+      } else {
+        pause.focus({ preventScroll: true });
+        announcement.textContent = state.hasKey ? 'Ищите выход.' : `Этаж ${state.floor}. Найдите ключ.`;
+      }
+      lastPhase = state.phase;
+    },
+    dispose() { events.abort(); },
+  };
+}

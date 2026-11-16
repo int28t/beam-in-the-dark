@@ -1,6 +1,8 @@
 import { parseMap } from '../map.js';
 import { moveCircle } from '../collision.js';
 import { normalizeMovement } from '../input.js';
+import { createGame } from '../game.js';
+import { FLOOR_TEMPLATE } from '../map.js';
 
 const tests = [];
 export function test(name, run) { tests.push({ name, run }); }
@@ -72,6 +74,75 @@ test('Движение за секунду одинаково при 30 и 144 �
     return position.x;
   }
   near(simulate(30), 2.65); near(simulate(144), 2.65);
+});
+
+test('Готовая карта: все клетки, ключ и выход достижимы от старта', () => {
+  const map = parseMap(FLOOR_TEMPLATE);
+  const start = Math.round(map.spawns.player.z / 1.5) * map.width + Math.round(map.spawns.player.x / 1.5);
+  const visited = new Set([start]);
+  const queue = [start];
+  for (let i = 0; i < queue.length; i++) {
+    for (const offset of [-1, 1, -map.width, map.width]) {
+      const next = queue[i] + offset;
+      if (map.walkable[next] && !visited.has(next)) { visited.add(next); queue.push(next); }
+    }
+  }
+  assert(visited.size === map.walkable.reduce((a, b) => a + b, 0));
+  for (const name of ['key', 'exit']) {
+    const point = map.spawns[name];
+    assert(visited.has(Math.round(point.z / 1.5) * map.width + Math.round(point.x / 1.5)));
+  }
+});
+test('Состояния: запертая дверь не завершает этаж, ключ открывает выход', () => {
+  const game = createGame();
+  assert(game.state.phase === 'menu');
+  game.dispatch('start');
+  game.resolveFrame({ exit: true });
+  assert(game.state.phase === 'playing' && !game.state.hasKey);
+  game.resolveFrame({ key: true });
+  assert(game.state.hasKey && game.state.phase === 'playing');
+  game.resolveFrame({ exit: true });
+  assert(game.state.phase === 'floorComplete');
+});
+test('Состояния: повторный подбор и события после завершения не меняют результат', () => {
+  const game = createGame(); game.dispatch('start');
+  game.resolveFrame({ key: true }); game.resolveFrame({ key: true });
+  game.resolveFrame({ exit: true });
+  game.resolveFrame({ caught: true });
+  assert(game.state.phase === 'floorComplete' && game.state.floor === 1);
+});
+test('Состояния: поражение имеет приоритет над ключом и выходом в одном кадре', () => {
+  const game = createGame(); game.dispatch('start');
+  game.resolveFrame({ caught: true, key: true, exit: true });
+  assert(game.state.phase === 'gameOver' && !game.state.hasKey);
+});
+test('Состояния: пауза блокирует взаимодействия, недопустимые действия игнорируются', () => {
+  const game = createGame(); game.dispatch('start'); game.dispatch('pause');
+  game.resolveFrame({ key: true, exit: true, caught: true });
+  game.dispatch('next'); game.dispatch('start');
+  assert(game.state.phase === 'paused' && !game.state.hasKey && game.state.floor === 1);
+  game.dispatch('resume'); assert(game.state.phase === 'playing');
+});
+test('Состояния: следующий этаж сбрасывает ключ, повтор сохраняет номер и сбрасывает состояние', () => {
+  const game = createGame(); game.dispatch('start');
+  game.resolveFrame({ key: true, exit: true }); game.dispatch('next');
+  assert(game.state.floor === 2 && !game.state.hasKey && game.state.phase === 'playing');
+  const revision = game.state.revision;
+  game.resolveFrame({ key: true }); game.dispatch('pause'); game.dispatch('restart');
+  assert(game.state.floor === 2 && !game.state.hasKey && game.state.revision === revision + 1);
+});
+test('Состояния: 20 переходов и 20 повторов не дублируют результат', () => {
+  const game = createGame(); game.dispatch('start');
+  for (let i = 0; i < 20; i++) {
+    game.resolveFrame({ key: true, exit: true }); game.dispatch('next'); game.dispatch('next');
+  }
+  assert(game.state.floor === 21);
+  for (let i = 0; i < 20; i++) {
+    game.resolveFrame({ caught: true }); game.dispatch('restart');
+    assert(game.state.phase === 'playing' && !game.state.hasKey && game.state.floor === 21);
+  }
+  game.dispatch('pause'); game.dispatch('newRun');
+  assert(game.state.floor === 1 && !game.state.hasKey && game.state.phase === 'playing');
 });
 
 export function runTests() {

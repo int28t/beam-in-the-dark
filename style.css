@@ -41,3 +41,5 @@ h1 { font: 400 clamp(36px, 5.5vw, 56px)/1.04 Georgia, serif; letter-spacing: -1p
 @media (max-width: 600px) { .hud { top: max(16px, env(safe-area-inset-top)); left: 17px; right: 17px; } .identity { font-size: 15px; gap: 8px; } .sigil { font-size: 25px; } .hud-actions { gap: 13px; } .floor-count { gap: 8px; } .floor-count span { font-size: 26px; } .panel { padding: 24px; } .objective { top: max(88px, calc(env(safe-area-inset-top) + 72px)); font-size: 12px; } .controls-hint { font-size: 11px; } }
 @media (max-height: 560px) { .overlay { padding: 85px 20px 20px; place-items: start center; } .panel { padding: 16px 25px; } .ornament, .panel-footnote { display: none; } h1 { font-size: 32px; margin: 10px 0; } #panel-description { margin: 12px 0 18px; } .panel-actions { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+#joystick { position: relative; }
+.objective.has-key { color: #ebce8c; border: 1px solid #d8b97655; }
