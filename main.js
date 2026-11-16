@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import nipplejs from 'nipplejs';
 import { createPlayer } from './entities.js';
 import { createInput } from './input.js';
+import { getDifficulty } from './difficulty.js';
 import { generateFloor } from './generator.js';
 import { createMapView } from './map-view.js';
 import { VERSION } from './config.js';
@@ -63,7 +64,7 @@ export function start() {
 
   function resetWorld() {
     mapView?.dispose();enemyViews.forEach(view=>view.dispose());
-    map=generateFloor({seed:runSeed,floor:game.state.floor});
+    map=generateFloor({seed:runSeed,floor:game.state.floor,difficulty:getDifficulty(game.state.floor)});
     ui.setFloorCode(map.seed,map.floor);
     world=createWorld(map);mapView=createMapView(map);scene.add(mapView.root);
     enemyViews=world.enemies.map(()=>{const view=createEnemyView();scene.add(view.root);return view;});

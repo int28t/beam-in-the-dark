@@ -83,7 +83,7 @@ function buildCandidate(seed,floor,roomTemplates,difficulty,attempt) {
   const route=[...findPath(start,key,map),...findPath(key,exit,map).slice(1)];
   for(let i=8;i<route.length;i+=12){const point=route[i],index=cellIndex(point,map);if(!used.has(index)){batteries.push({id:batteries.length,...point});used.add(index);}}
   // Room supplies remain useful when the player takes another branch.
-  for(const room of rooms){const point={x:(room.originX+5)*CELL_SIZE,z:(room.originZ+1)*CELL_SIZE},index=cellIndex(point,map);
+  for(const room of rooms){if(room.id%(difficulty.supplyEveryRooms??1)!==0)continue;const point={x:(room.originX+5)*CELL_SIZE,z:(room.originZ+1)*CELL_SIZE},index=cellIndex(point,map);
     if(!used.has(index)&&map.walkable[index]){batteries.push({id:batteries.length,...point});used.add(index);}}
   return {...map,batteries,enemies,rooms,connections,seed:seed>>>0,floor,attempts:attempt+1,fallback:false,
     enemyOptions:difficulty.enemyOptions??{},keyRoom:keyRoom.id,exitRoom:exitRoom.id};

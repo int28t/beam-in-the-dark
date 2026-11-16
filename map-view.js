@@ -73,6 +73,21 @@ export function createMapView(map) {
   mesh(new THREE.BoxGeometry(0.92, 0.025, 0.7), exitMaterial, exit, 0, 0.02, -0.3);
   const exitLight = new THREE.PointLight(0x5fc6bd, 5, 5, 2);
   exitLight.position.set(0, 1.4, -0.4); exit.add(exitLight);
+  // Landmarks stand inside existing wall cells; decorative geometry adds no hidden obstacles.
+  const rooms=map.rooms??[];
+  if(rooms.length){
+    const pillars=instances(new THREE.CylinderGeometry(.24,.31,1.75,6),new THREE.MeshStandardMaterial({color:0x384951,roughness:.9}),rooms.length*4);
+    pillars.castShadow=true;
+    let n=0;
+    for(const room of rooms){for(const [dx,dz] of [[0,0],[6,0],[0,6],[6,6]]){
+      matrix.makeTranslation((room.originX+dx)*CELL_SIZE,.875,(room.originZ+dz)*CELL_SIZE);pillars.setMatrixAt(n++,matrix);
+    }}
+    const markers=instances(new THREE.RingGeometry(.35,.48,8),new THREE.MeshStandardMaterial({color:0x7a806f,metalness:.5,roughness:.65,side:THREE.DoubleSide}),rooms.length);
+    for(let i=0;i<rooms.length;i++){
+      const room=rooms[i];matrix.makeRotationX(-Math.PI/2);matrix.setPosition((room.originX+3)*CELL_SIZE,.008,(room.originZ+3)*CELL_SIZE);markers.setMatrixAt(i,matrix);
+      color.setHex([0x7c8e8c,0x9d8b6f,0x747f9d,0x8b747b][i%4]);markers.setColorAt(i,color);
+    }
+  }
   const batteryViews = (map.batteries??[]).map(battery=>{
     const group=new THREE.Group();group.position.set(battery.x,.4,battery.z);root.add(group);
     mesh(new THREE.CylinderGeometry(.12,.12,.32,8),frameMaterial,group,0,0,0);

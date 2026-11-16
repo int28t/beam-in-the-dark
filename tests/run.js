@@ -8,6 +8,7 @@ import { test, assert, near, throws, runTests } from './harness.js';
 import './enemy.test.js';
 import './world.test.js';
 import './generator.test.js';
+import './difficulty.test.js';
 
 test('Парсер: координаты, непроходимые стены и точки появления', () => {
   const map = parseMap(['#####', '#P.K#', '#..D#', '#####']);

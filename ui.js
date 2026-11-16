@@ -35,6 +35,7 @@ export function createUI(onAction, { touch }) {
   const batteryFill=document.querySelector('#battery-fill');
   const batteryValue=document.querySelector('#battery-value');
   const danger=document.querySelector('#danger');
+  const instructions=document.querySelector('#instructions');
   let lastBattery=-1,lastLight;
   const events = new AbortController();
   flashlight.addEventListener('click',()=>onAction('toggleLight'),{signal:events.signal});
@@ -52,7 +53,7 @@ export function createUI(onAction, { touch }) {
   }, { signal: events.signal });
   overlay.addEventListener('keydown', event => {
     if (event.key !== 'Tab') return;
-    const buttons = actions.querySelectorAll('button');
+    const buttons = [...panel.querySelectorAll('button:not(:disabled),summary,select,input')].filter(element=>element.getClientRects().length>0);
     const first = buttons[0];
     const last = buttons[buttons.length - 1];
     if (event.shiftKey && document.activeElement === first) { last.focus(); event.preventDefault(); }
@@ -88,6 +89,8 @@ export function createUI(onAction, { touch }) {
       }
       if (state.phase === lastPhase) return;
       overlay.hidden = playing;
+      instructions.hidden=!['menu','paused'].includes(state.phase);
+      if(state.phase==='paused')instructions.open=false;
       if (!playing) {
         const content = PANELS[state.phase];
         document.querySelector('#panel-caption').textContent = content.caption;
