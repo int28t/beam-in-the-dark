@@ -94,5 +94,5 @@ node tests/run.js
 </details>
 
 <p align="center">
-  <sub>Beam in the Dark · <a href="./LICENSE">MIT License</a></sub>
+  <sub>Beam in the Dark · <a href="./LICENSE">MIT License</a> · <a href="./THIRD_PARTY_NOTICES.md">Third-party notices</a></sub>
 </p>
