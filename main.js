@@ -76,7 +76,7 @@ export function start() {
   function sync() {
     if (activeRevision !== game.state.revision) {
       resetWorld();
-      input.reset();
+      input.reset({ aim: true });
       activeRevision = game.state.revision;
     }
     const phaseChanged = activePhase !== game.state.phase;

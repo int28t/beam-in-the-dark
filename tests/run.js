@@ -1,6 +1,6 @@
 import { parseMap } from '../map.js';
 import { moveCircle } from '../collision.js';
-import { normalizeMovement } from '../input.js';
+import { normalizeMovement, createInputState } from '../input.js';
 import { createGame } from '../game.js';
 import { FLOOR_TEMPLATE } from '../map.js';
 
@@ -143,6 +143,39 @@ test('Состояния: 20 переходов и 20 повторов не ду
   }
   game.dispatch('pause'); game.dispatch('newRun');
   assert(game.state.floor === 1 && !game.state.hasKey && game.state.phase === 'playing');
+});
+
+test('Столкновение: округление касания угла не позволяет войти в стену', () => {
+  const wall = { minX: 2.25, maxX: 3.75, minZ: 6.75, maxZ: 8.25 };
+  const result = moveCircle({ x: 4.020230846961565, z: 6.668709759932979 },
+    { x: -0.1278471556538716, z: 0.08079325218568556 }, 0.27, [wall]);
+  const dx = Math.max(wall.minX - result.x, 0, result.x - wall.maxX);
+  const dz = Math.max(wall.minZ - result.z, 0, result.z - wall.maxZ);
+  assert(Math.hypot(dx, dz) >= 0.27 - 1e-9, 'Круг вошёл внутрь стены на углу');
+});
+test('Ввод: движение и повтор клавиши не сбивают прицеливание мышью', () => {
+  const input = createInputState();
+  input.setEnabled(true); input.pointAt(0.3, -0.4);
+  input.keyDown('KeyW'); input.keyDown('KeyW');
+  const controls = input.sample();
+  assert(controls.mouseAim && controls.moveZ === -1);
+  near(controls.pointerX, 0.3); near(controls.pointerY, -0.4);
+  input.keyUp('KeyW'); near(input.sample().moveZ, 0);
+});
+test('Ввод: джойстик сохраняет направление после отпускания, пауза сбрасывает движение', () => {
+  const input = createInputState(); input.setEnabled(true);
+  input.setStick(0.6, 0.8); let controls = input.sample();
+  near(controls.aimX, 0.6); near(controls.aimZ, 0.8);
+  input.setStick(0, 0); controls = input.sample();
+  near(controls.moveX, 0); near(controls.aimX, 0.6); near(controls.aimZ, 0.8);
+  input.keyDown('KeyD'); input.setEnabled(false); input.keyDown('KeyW');
+  controls = input.sample(); near(controls.moveX, 0); near(controls.moveZ, 0);
+  input.setEnabled(true); controls = input.sample(); near(controls.moveX, 0); near(controls.moveZ, 0);
+});
+test('Ввод: полный сброс этажа возвращает начальное направление света', () => {
+  const input = createInputState(); input.setEnabled(true); input.setStick(1, 0); input.sample();
+  input.reset({ aim: true }); const controls = input.sample();
+  near(controls.aimX, 0); near(controls.aimZ, -1); near(controls.moveX, 0);
 });
 
 export function runTests() {
