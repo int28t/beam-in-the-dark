@@ -28,3 +28,18 @@ export function moveCircle(position, displacement, radius, walls) {
   }
   return position;
 }
+
+export function createEllipseCollider(walls, radiusX, radiusZ) {
+  const scaledWalls = walls.map(wall => ({ minX: wall.minX / radiusX, maxX: wall.maxX / radiusX,
+    minZ: wall.minZ / radiusZ, maxZ: wall.maxZ / radiusZ }));
+  const point = { x: 0, z: 0 }, delta = { x: 0, z: 0 };
+  return {
+    move(position, displacement) {
+      point.x = position.x / radiusX; point.z = position.z / radiusZ;
+      delta.x = displacement.x / radiusX; delta.z = displacement.z / radiusZ;
+      moveCircle(point, delta, 1, scaledWalls);
+      position.x = point.x * radiusX; position.z = point.z * radiusZ;
+      return position;
+    },
+  };
+}

@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 
-export const PLAYER_RADIUS = 0.27;
-export const PLAYER_SPEED = 2.65;
 
 export function createPlayer() {
   const root = new THREE.Group();
@@ -46,7 +44,7 @@ export function createPlayer() {
   lightTarget.position.set(0.1, 0, -7);
   body.add(light, lightTarget);
   light.target = lightTarget;
-  const halo = new THREE.PointLight(0xa1c4c8, 7, 5.5, 1.5);
+  const halo = new THREE.PointLight(0xa1c4c8, 1.2, 2.2, 2);
   halo.position.y = 1.7;
   root.add(halo);
   return {
