@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { CELL_SIZE } from './map.js';
+import { createLevelArt } from './level-art.js';
 
-export function createBiomeDecor(map, biome) {
+export function createBiomeDecor(map, biome, art = createLevelArt(map)) {
   const root = new THREE.Group(),
     detail = new THREE.Group();
   root.add(detail);
@@ -112,26 +113,177 @@ export function createBiomeDecor(map, biome) {
         );
       });
     }
-    const seal = batch(
-      new THREE.RingGeometry(0.32, 0.49, biome.id === 'ash' ? 3 : biome.id === 'flooded' ? 12 : 8),
-      accent,
-      rooms.length,
-      true,
+  }
+  // Wall-mounted furniture: visible identity, with no false floor obstacles.
+  const faces = art.surfaces.filter(
+    (face) => (face.x * 7 + face.z * 11 + face.nx * 2 + face.nz * 3 + 100) % 5 === 0,
+  );
+  const iron = material({ color: 0x222a2c, roughness: 0.75, metalness: 0.5 });
+  const pale = material({ color: biome.accent, roughness: 0.85 });
+  const dark = material({ color: biome.id === 'flooded' ? 0x142826 : 0x201c23, roughness: 1 });
+  const frames = batch(new THREE.BoxGeometry(0.74, 0.92, 0.06), iron, faces.length);
+  const recesses = batch(new THREE.BoxGeometry(0.61, 0.77, 0.035), dark, faces.length);
+  const marks = batch(new THREE.BoxGeometry(0.045, 0.43, 0.02), pale, faces.length * 2);
+  let banners, rods, plaques;
+  if (biome.id === 'fortress') {
+    const cloth = material({ color: 0x663748, roughness: 1, side: THREE.DoubleSide });
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.26, 0.42);
+    shape.lineTo(0.26, 0.42);
+    shape.lineTo(0.26, -0.28);
+    shape.lineTo(0.12, -0.22);
+    shape.lineTo(0.02, -0.44);
+    shape.lineTo(-0.1, -0.29);
+    shape.lineTo(-0.26, -0.35);
+    shape.closePath();
+    banners = batch(new THREE.ShapeGeometry(shape), cloth, faces.length);
+    rods = batch(new THREE.BoxGeometry(0.68, 0.045, 0.045), pale, faces.length);
+    plaques = batch(new THREE.RingGeometry(0.09, 0.13, 4), pale, faces.length);
+  } else if (biome.id === 'flooded') {
+    plaques = batch(new THREE.CircleGeometry(0.16, 7), pale, faces.length);
+  } else {
+    plaques = batch(
+      new THREE.RingGeometry(0.15, 0.18, 3),
+      material({ color: 0xc48b54, emissive: 0x65321b, emissiveIntensity: 0.35, roughness: 1 }),
+      faces.length,
     );
-    rooms.forEach((room, i) =>
+  }
+  faces.forEach((face, i) => {
+    const angle = Math.atan2(face.nx, face.nz),
+      tx = face.nz,
+      tz = -face.nx;
+    const x = face.x * CELL_SIZE + face.nx * (CELL_SIZE / 2),
+      z = face.z * CELL_SIZE + face.nz * (CELL_SIZE / 2);
+    put(frames, i, x + face.nx * 0.035, 0.89, z + face.nz * 0.035, 1, 1, 1, 0, angle);
+    put(recesses, i, x + face.nx * 0.075, 0.89, z + face.nz * 0.075, 1, 1, 1, 0, angle);
+    for (let side = 0; side < 2; side++) {
+      const offset = side ? 0.19 : -0.19;
       put(
-        seal,
-        i,
-        (room.originX + 3) * CELL_SIZE,
-        0.009,
-        (room.originZ + 3) * CELL_SIZE,
+        marks,
+        i * 2 + side,
+        x + tx * offset + face.nx * 0.105,
+        0.87,
+        z + tz * offset + face.nz * 0.105,
+        1,
+        biome.id === 'flooded' ? 0.7 : 1,
+        1,
+        0,
+        angle,
+      );
+    }
+    put(
+      plaques,
+      i,
+      x + face.nx * 0.12,
+      biome.id === 'fortress' ? 0.96 : 0.97,
+      z + face.nz * 0.12,
+      1,
+      1,
+      1,
+      0,
+      angle,
+    );
+    if (banners) {
+      put(banners, i, x + face.nx * 0.1, 0.94, z + face.nz * 0.1, 1, 1, 1, 0, angle);
+      put(rods, i, x + face.nx * 0.12, 1.39, z + face.nz * 0.12, 1, 1, 1, 0, angle);
+    }
+  });
+  // Room motifs occupy only the guaranteed walkable central cross.
+  const inlay = material({
+    color: biome.id === 'fortress' ? 0xa08968 : biome.accent,
+    roughness: 0.8,
+    metalness: 0.15,
+  });
+  const motifs = batch(new THREE.PlaneGeometry(1, 1), inlay, art.rooms.length * 4);
+  const compassRooms = art.rooms.filter((room) => room.motif === 'compass');
+  const needle = new THREE.Shape();
+  needle.moveTo(0, 0);
+  needle.lineTo(0.15, 0.62);
+  needle.lineTo(0, 1.72);
+  needle.lineTo(-0.15, 0.62);
+  needle.closePath();
+  const compass = batch(new THREE.ShapeGeometry(needle), inlay, compassRooms.length * 4);
+  compassRooms.forEach((room, i) => {
+    for (let arm = 0; arm < 4; arm++)
+      put(
+        compass,
+        i * 4 + arm,
+        room.x * CELL_SIZE,
+        0.034,
+        room.z * CELL_SIZE,
         1,
         1,
         1,
         -Math.PI / 2,
-      ),
-    );
-  }
+        0,
+        (arm * Math.PI) / 2,
+      );
+  });
+
+  art.rooms.forEach((room, i) => {
+    const x = room.x * CELL_SIZE,
+      z = room.z * CELL_SIZE;
+    for (let part = 0; part < 4; part++) {
+      const a = (part * Math.PI) / 2;
+      if (room.motif === 'tomb') {
+        put(
+          motifs,
+          i * 4 + part,
+          x + Math.cos(a) * 1.35,
+          0.032,
+          z + Math.sin(a) * 1.35,
+          part % 2 ? 0.45 : 0.78,
+          part % 2 ? 0.78 : 0.45,
+          1,
+          -Math.PI / 2,
+          0,
+          0,
+        );
+      } else if (room.motif === 'tiles') {
+        put(
+          motifs,
+          i * 4 + part,
+          x + (part - 1.5) * 0.5,
+          0.032,
+          z,
+          0.22,
+          0.22,
+          1,
+          -Math.PI / 2,
+          0,
+          Math.PI / 4,
+        );
+      } else if (room.motif === 'ritual' || biome.id === 'ash') {
+        put(
+          motifs,
+          i * 4 + part,
+          x + Math.cos(a) * 0.67,
+          0.032,
+          z + Math.sin(a) * 0.67,
+          0.64,
+          0.026,
+          1,
+          -Math.PI / 2,
+          0,
+          a + Math.PI / 4,
+        );
+      } else {
+        put(
+          motifs,
+          i * 4 + part,
+          x + Math.cos(a) * 0.65,
+          0.032,
+          z + Math.sin(a) * 0.65,
+          0.42,
+          0.033,
+          1,
+          -Math.PI / 2,
+          0,
+          a,
+        );
+      }
+    }
+  });
   let disposed = false;
   return {
     root,
