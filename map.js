@@ -5,13 +5,13 @@ export const FLOOR_TEMPLATE = [
   '#P....#...........#',
   '#.....#....#..K...#',
   '#.....#....#......#',
-  '#..........#......#',
+  '#....B.....#......#',
   '###.####.###..#####',
   '#.....#...........#',
-  '#.....#...........#',
+  '#.....#.....E.....#',
   '#........###.###..#',
   '#####.####.....#..#',
-  '#..............#..#',
+  '#.......B......#..#',
   '#....#.........#..#',
   '#....#..####.###..#',
   '#D...#............#',
@@ -27,12 +27,13 @@ export function parseMap(rows) {
   const walls = [];
   const walkable = new Uint8Array(width * height);
   const spawns = {};
+  const batteries = [], enemies = [];
   const symbols = { P: 'player', K: 'key', D: 'exit' };
   for (let z = 0; z < height; z++) {
     if (typeof rows[z] !== 'string' || rows[z].length !== width) throw new Error('Строки карты должны иметь одинаковую длину');
     for (let x = 0; x < width; x++) {
       const symbol = rows[z][x];
-      if (!'#.PKD'.includes(symbol)) throw new Error(`Неизвестный символ: ${symbol}`);
+      if (!'#.PKDBE'.includes(symbol)) throw new Error(`Неизвестный символ: ${symbol}`);
       if ((x === 0 || z === 0 || x === width - 1 || z === height - 1) && symbol !== '#') {
         throw new Error('Граница карты должна быть закрыта стенами');
       }
@@ -43,6 +44,8 @@ export function parseMap(rows) {
           minZ: worldZ - CELL_SIZE / 2, maxZ: worldZ + CELL_SIZE / 2 });
       } else {
         walkable[z * width + x] = 1;
+        if(symbol === 'B') batteries.push({id:batteries.length,x:worldX,z:worldZ});
+        if(symbol === 'E') enemies.push({x:worldX,z:worldZ});
         if (symbols[symbol]) {
           const name = symbols[symbol];
           if (spawns[name]) throw new Error(`Повторная точка: ${symbol}`);
@@ -52,5 +55,5 @@ export function parseMap(rows) {
     }
   }
   if (!spawns.player) throw new Error('Не указан старт игрока');
-  return { width, height, walls, walkable, spawns };
+  return { width, height, walls, walkable, spawns, batteries, enemies };
 }

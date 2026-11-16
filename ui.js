@@ -1,3 +1,4 @@
+import { VERSION } from './config.js';
 const PANELS = {
   menu: {
     caption: 'За порогом света', title: 'Beam in the Dark',
@@ -29,7 +30,14 @@ export function createUI(onAction, { touch }) {
   const objective = document.querySelector('#objective');
   const touchControls = document.querySelector('#touch-controls');
   const announcement = document.querySelector('#announcement');
+  const flashlight=document.querySelector('#flashlight');
+  const batteryMeter=document.querySelector('#battery-meter');
+  const batteryFill=document.querySelector('#battery-fill');
+  const batteryValue=document.querySelector('#battery-value');
+  const danger=document.querySelector('#danger');
+  let lastBattery=-1,lastLight;
   const events = new AbortController();
+  flashlight.addEventListener('click',()=>onAction('toggleLight'),{signal:events.signal});
   let lastPhase;
   let lastKey;
   let lastFloor;
@@ -50,14 +58,19 @@ export function createUI(onAction, { touch }) {
     if (event.shiftKey && document.activeElement === first) { last.focus(); event.preventDefault(); }
     else if (!event.shiftKey && document.activeElement === last) { first.focus(); event.preventDefault(); }
   }, { signal: events.signal });
-  document.querySelector('#version').textContent = 'Версия 0.3.0';
+  document.querySelector('#version').textContent = `Версия ${VERSION}`;
   document.querySelector('#controls-hint').innerHTML = touch
     ? 'Джойстик — движение и направление света'
-    : '<kbd>W A S D</kbd> / стрелки — движение　 Мышь — свет　 <kbd>Esc</kbd> — пауза';
+    : '<kbd>W A S D</kbd> / стрелки — движение　 Мышь — свет　 <kbd>F</kbd> — фонарь　 <kbd>Esc</kbd> — пауза';
   return {
-    render(state, { nearLockedExit = false } = {}) {
+    render(state, { nearLockedExit = false,threat=false,lightHit=false } = {}) {
       const playing = state.phase === 'playing';
       pause.hidden = !playing;
+      flashlight.disabled=!playing||state.battery<=0;
+      const charge=Math.ceil(state.battery);
+      if(charge!==lastBattery){batteryMeter.setAttribute('aria-valuenow',String(charge));batteryFill.style.width=`${charge}%`;batteryValue.textContent=`${charge}%`;batteryMeter.classList.toggle('low',charge<=20);lastBattery=charge;}
+      if(state.lightOn!==lastLight){flashlight.setAttribute('aria-pressed',String(state.lightOn));lastLight=state.lightOn;}
+      danger.hidden=!playing||!threat;danger.textContent=lightHit?'Свет сдерживает тень':'Вас преследуют';
       touchControls.hidden = !touch || !playing;
       document.querySelector('#scene').setAttribute('aria-hidden', String(!playing));
       const message = nearLockedExit && !state.hasKey ? 'Дверь заперта. Найдите золотой ключ.'

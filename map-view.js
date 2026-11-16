@@ -73,9 +73,17 @@ export function createMapView(map) {
   mesh(new THREE.BoxGeometry(0.92, 0.025, 0.7), exitMaterial, exit, 0, 0.02, -0.3);
   const exitLight = new THREE.PointLight(0x5fc6bd, 5, 5, 2);
   exitLight.position.set(0, 1.4, -0.4); exit.add(exitLight);
+  const batteryViews = (map.batteries??[]).map(battery=>{
+    const group=new THREE.Group();group.position.set(battery.x,.4,battery.z);root.add(group);
+    mesh(new THREE.CylinderGeometry(.12,.12,.32,8),frameMaterial,group,0,0,0);
+    mesh(new THREE.CylinderGeometry(.125,.125,.07,8),exitMaterial,group,0,.08,0);
+    return {group,id:battery.id};
+  });
+  const emptyCollected=new Set();
   return {
     root,
-    update(time, hasKey) {
+    update(time, hasKey,collected=emptyCollected) {
+      for(const battery of batteryViews) battery.group.visible=!collected.has(battery.id);
       key.visible = !hasKey;
       key.position.y = 0.75 + Math.sin(time * 2.3) * 0.08;
       key.rotation.y = time * 0.8;

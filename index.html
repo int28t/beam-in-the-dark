@@ -20,6 +20,8 @@
       <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.3.0</small></div></div>
       <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
     </header>
+    <div class="equipment"><button id="flashlight" type="button" aria-pressed="true">Фонарь <kbd>F</kbd></button><div id="battery-meter" role="meter" aria-label="Заряд фонаря" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="battery-fill"></div></div><span id="battery-value">100%</span></div>
+    <div id="danger" class="danger" role="status" hidden>Вас преследуют</div>
     <div class="objective" id="objective" role="status">Свет покажет дорогу</div>
     <div id="overlay" class="overlay">
       <section class="panel" aria-labelledby="panel-title">
