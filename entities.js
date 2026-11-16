@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-
 export function createPlayer() {
   const root = new THREE.Group();
   const body = new THREE.Group();
@@ -30,7 +29,8 @@ export function createPlayer() {
   mesh(new THREE.SphereGeometry(0.17, 8, 6), face, 0, 1.01, -0.17).scale.set(1, 0.95, 0.38);
   mesh(new THREE.BoxGeometry(0.15, 0.19, 0.23), face, -0.13, 0.13, 0);
   mesh(new THREE.BoxGeometry(0.15, 0.19, 0.23), face, 0.13, 0.13, 0);
-  mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.25, 8), brass, 0.31, 0.68, -0.28).rotation.x = Math.PI / 2;
+  mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.25, 8), brass, 0.31, 0.68, -0.28).rotation.x =
+    Math.PI / 2;
   mesh(new THREE.CircleGeometry(0.071, 12), glow, 0.31, 0.68, -0.409).rotation.y = Math.PI;
   const light = new THREE.SpotLight(0xffe0a1, 34, 12, Math.PI / 6.5, 0.6, 1.5);
   light.position.set(0.31, 0.76, -0.4);
@@ -48,15 +48,17 @@ export function createPlayer() {
   halo.position.y = 1.7;
   root.add(halo);
   return {
-    root, light, lightTarget,
+    root,
+    light,
+    lightTarget,
     update(time, moving, aimX, aimZ) {
       if (aimX || aimZ) body.rotation.y = Math.atan2(-aimX, -aimZ);
       body.position.y = moving ? Math.sin(time * 11) * 0.035 : Math.sin(time * 2) * 0.012;
       body.rotation.z = moving ? Math.sin(time * 5.5) * 0.045 : 0;
     },
     dispose() {
-      geometries.forEach(value => value.dispose());
-      materials.forEach(value => value.dispose());
+      geometries.forEach((value) => value.dispose());
+      materials.forEach((value) => value.dispose());
       light.dispose();
       halo.dispose();
       root.removeFromParent();

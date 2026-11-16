@@ -10,12 +10,15 @@ import { createWorld } from './world.js';
 import { createEnemyView } from './enemy-view.js';
 import { createGame } from './game.js';
 import { createUI } from './ui.js';
-import { loadProgress,saveProgress } from './storage.js';
+import { loadProgress, saveProgress } from './storage.js';
 import { createAudio } from './audio.js';
 
 export function start() {
   const container = document.querySelector('#scene');
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: 'high-performance',
+  });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -33,8 +36,8 @@ export function start() {
   scene.add(moon);
   const player = createPlayer();
   scene.add(player.root);
-  let map,world,mapView;
-  let enemyViews=[];
+  let map, world, mapView;
+  let enemyViews = [];
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
   // tan(55°) ≈ 12/8.4; horizontal field of view remains usable on narrow phones.
@@ -45,20 +48,33 @@ export function start() {
   const mouse = new THREE.Vector2();
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const aimPoint = new THREE.Vector3();
-  const requestedSeed=new URLSearchParams(location.search).get('seed');
-  const randomSeed=()=>crypto.getRandomValues(new Uint32Array(1))[0];
-  let runSeed=requestedSeed!==null&&/^\d{1,10}$/.test(requestedSeed)?Number(requestedSeed)>>>0:randomSeed();
+  const requestedSeed = new URLSearchParams(location.search).get('seed');
+  const randomSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
+  let runSeed =
+    requestedSeed !== null && /^\d{1,10}$/.test(requestedSeed)
+      ? Number(requestedSeed) >>> 0
+      : randomSeed();
   const game = createGame();
-  const progress=loadProgress();
-  const audio=createAudio();audio.setMuted(progress.muted);
+  const progress = loadProgress();
+  const audio = createAudio();
+  audio.setMuted(progress.muted);
   const touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-  const ui = createUI(action => act(action), { touch,tutorialSeen:progress.tutorialSeen });
+  const ui = createUI((action) => act(action), { touch, tutorialSeen: progress.tutorialSeen });
   ui.setProgress(progress);
-  const input = createInput(container, { joystickZone: document.querySelector('#joystick'), nipplejs,onToggle(){act('toggleLight');},onMute(){act('toggleMute');},
+  const input = createInput(container, {
+    joystickZone: document.querySelector('#joystick'),
+    nipplejs,
+    onToggle() {
+      act('toggleLight');
+    },
+    onMute() {
+      act('toggleMute');
+    },
     onPause() {
       if (game.state.phase === 'playing') act('pause');
       else if (game.state.phase === 'paused') act('resume');
-    } });
+    },
+  });
   const events = new AbortController();
   let previous = null;
   let time = 0;
@@ -68,18 +84,29 @@ export function start() {
   let disposed = false;
 
   function resetWorld() {
-    mapView?.dispose();enemyViews.forEach(view=>view.dispose());
-    map=generateFloor({seed:runSeed,floor:game.state.floor,difficulty:getDifficulty(game.state.floor)});
-    ui.setFloorCode(map.seed,map.floor);
-    world=createWorld(map);mapView=createMapView(map);scene.add(mapView.root);
-    enemyViews=world.enemies.map(()=>{const view=createEnemyView();scene.add(view.root);return view;});
-    player.root.position.set(world.position.x,0,world.position.z);
-    player.update(0,false,0,-1);
+    mapView?.dispose();
+    enemyViews.forEach((view) => view.dispose());
+    map = generateFloor({
+      seed: runSeed,
+      floor: game.state.floor,
+      difficulty: getDifficulty(game.state.floor),
+    });
+    ui.setFloorCode(map.seed, map.floor);
+    world = createWorld(map);
+    mapView = createMapView(map);
+    scene.add(mapView.root);
+    enemyViews = world.enemies.map(() => {
+      const view = createEnemyView();
+      scene.add(view.root);
+      return view;
+    });
+    player.root.position.set(world.position.x, 0, world.position.z);
+    player.update(0, false, 0, -1);
     cameraFocus.copy(player.root.position);
     camera.position.copy(cameraFocus).add(cameraOffset);
     camera.lookAt(cameraFocus);
     time = 0;
-    world.enemies.forEach((enemy,i)=>enemyViews[i].update(enemy,0));
+    world.enemies.forEach((enemy, i) => enemyViews[i].update(enemy, 0));
   }
   function sync() {
     if (activeRevision !== game.state.revision) {
@@ -93,24 +120,37 @@ export function start() {
       input.setEnabled(game.state.phase === 'playing');
       previous = null;
       activePhase = game.state.phase;
-      if(activePhase!=='playing')audio.pause();
+      if (activePhase !== 'playing') audio.pause();
     }
-    mapView.update(time, game.state.hasKey,world.collected);
-    player.light.visible=game.state.lightOn;
+    mapView.update(time, game.state.hasKey, world.collected);
+    player.light.visible = game.state.lightOn;
   }
   function act(action) {
-    if(action==='toggleMute'){
-      progress.muted=!progress.muted;audio.setMuted(progress.muted);
-      if(!progress.muted)void audio.unlock();saveProgress(undefined,progress);ui.setProgress(progress);return;
+    if (action === 'toggleMute') {
+      progress.muted = !progress.muted;
+      audio.setMuted(progress.muted);
+      if (!progress.muted) void audio.unlock();
+      saveProgress(undefined, progress);
+      ui.setProgress(progress);
+      return;
     }
-    if(['start','resume','restart','next','newRun','toggleLight'].includes(action))void audio.unlock();
-    if(action==='newRun'&&game.state.phase!=='playing')runSeed=randomSeed();
-    if(action==='start'&&!progress.tutorialSeen){progress.tutorialSeen=true;saveProgress(undefined,progress);}
-    const lightWasOn=game.state.lightOn;
-    game.dispatch(action);sync();
-    if(lightWasOn!==game.state.lightOn&&action==='toggleLight')audio.play('click');
+    if (['start', 'resume', 'restart', 'next', 'newRun', 'toggleLight'].includes(action))
+      void audio.unlock();
+    if (action === 'newRun' && game.state.phase !== 'playing') runSeed = randomSeed();
+    if (action === 'start' && !progress.tutorialSeen) {
+      progress.tutorialSeen = true;
+      saveProgress(undefined, progress);
+    }
+    const lightWasOn = game.state.lightOn;
+    game.dispatch(action);
+    sync();
+    if (lightWasOn !== game.state.lightOn && action === 'toggleLight') audio.play('click');
   }
-  function pause() { audio.pause();if (game.state.phase === 'playing') act('pause'); else input.reset(); }
+  function pause() {
+    audio.pause();
+    if (game.state.phase === 'playing') act('pause');
+    else input.reset();
+  }
   function resize() {
     const width = Math.max(1, container.clientWidth);
     const height = Math.max(1, container.clientHeight);
@@ -121,14 +161,27 @@ export function start() {
   }
   window.addEventListener('resize', resize, { signal: events.signal });
   window.addEventListener('blur', pause, { signal: events.signal });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); }, { signal: events.signal });
-  renderer.domElement.addEventListener('webglcontextlost', event => {
-    event.preventDefault(); pause();
-    document.querySelector('#error-message').textContent = 'Графический контекст потерян. Обновите страницу, чтобы вернуться в замок.';
-    document.querySelector('#fatal-error').hidden = false;
-  }, { signal: events.signal });
-  resize(); sync();
-  document.querySelector('#version').textContent=`Версия ${VERSION}`;
+  document.addEventListener(
+    'visibilitychange',
+    () => {
+      if (document.hidden) pause();
+    },
+    { signal: events.signal },
+  );
+  renderer.domElement.addEventListener(
+    'webglcontextlost',
+    (event) => {
+      event.preventDefault();
+      pause();
+      document.querySelector('#error-message').textContent =
+        'Графический контекст потерян. Обновите страницу, чтобы вернуться в замок.';
+      document.querySelector('#fatal-error').hidden = false;
+    },
+    { signal: events.signal },
+  );
+  resize();
+  sync();
+  document.querySelector('#version').textContent = `Версия ${VERSION}`;
 
   function animate(now) {
     animation = requestAnimationFrame(animate);
@@ -145,20 +198,27 @@ export function start() {
           controls.aimZ = aimPoint.z - player.root.position.z;
         }
       }
-      const feedback=world.step(dt,controls,game);
-      player.root.position.set(world.position.x,0,world.position.z);
-      player.update(time,feedback.walking,world.aim.x,world.aim.z);
-      for(let i=0;i<world.enemies.length;i++) enemyViews[i].update(world.enemies[i],time);
+      const feedback = world.step(dt, controls, game);
+      player.root.position.set(world.position.x, 0, world.position.z);
+      player.update(time, feedback.walking, world.aim.x, world.aim.z);
+      for (let i = 0; i < world.enemies.length; i++) enemyViews[i].update(world.enemies[i], time);
       if (activePhase !== game.state.phase) sync();
-      if(game.state.phase==='playing')audio.update(dt,feedback);
-      if(feedback.keyPicked)audio.play('key');
-      if(feedback.batteriesPicked)audio.play('battery');
-      if(feedback.caught)audio.play('caught');
-      if(feedback.completed){audio.play('complete');if(game.state.streak>progress.best){progress.best=game.state.streak;saveProgress(undefined,progress);ui.setProgress(progress);}}
-      ui.render(game.state,feedback);
-      mapView.update(time,game.state.hasKey,world.collected);
-      player.light.visible=game.state.lightOn;
-      const position=player.root.position;
+      if (game.state.phase === 'playing') audio.update(dt, feedback);
+      if (feedback.keyPicked) audio.play('key');
+      if (feedback.batteriesPicked) audio.play('battery');
+      if (feedback.caught) audio.play('caught');
+      if (feedback.completed) {
+        audio.play('complete');
+        if (game.state.streak > progress.best) {
+          progress.best = game.state.streak;
+          saveProgress(undefined, progress);
+          ui.setProgress(progress);
+        }
+      }
+      ui.render(game.state, feedback);
+      mapView.update(time, game.state.hasKey, world.collected);
+      player.light.visible = game.state.lightOn;
+      const position = player.root.position;
       cameraFocus.lerp(position, 1 - Math.exp(-7 * dt));
       cameraDestination.copy(cameraFocus).add(cameraOffset);
       camera.position.copy(cameraDestination);
@@ -172,9 +232,23 @@ export function start() {
     if (disposed) return;
     disposed = true;
     cancelAnimationFrame(animation);
-    events.abort(); audio.dispose(); input.dispose(); ui.dispose(); player.dispose(); enemyViews.forEach(view=>view.dispose()); mapView.dispose(); renderer.dispose();
+    events.abort();
+    audio.dispose();
+    input.dispose();
+    ui.dispose();
+    player.dispose();
+    enemyViews.forEach((view) => view.dispose());
+    mapView.dispose();
+    renderer.dispose();
     renderer.domElement.remove();
   }
-  window.addEventListener('pagehide', event => { pause(); if (!event.persisted) dispose(); }, { signal: events.signal });
+  window.addEventListener(
+    'pagehide',
+    (event) => {
+      pause();
+      if (!event.persisted) dispose();
+    },
+    { signal: events.signal },
+  );
   return { dispose };
 }
