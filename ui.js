@@ -1,3 +1,4 @@
+import { bindActionButton } from './input.js';
 import { VERSION } from './config.js';
 const PANELS = {
   menu: {
@@ -83,7 +84,7 @@ export function createUI(onAction, { touch, tutorialSeen = false }) {
     signal: events.signal,
   });
   mute.addEventListener('click', () => onAction('toggleMute'), { signal: events.signal });
-  flashlight.addEventListener('click', () => onAction('toggleLight'), { signal: events.signal });
+  bindActionButton(flashlight, () => onAction('toggleLight'), { signal: events.signal });
   let lastPhase;
   let lastKey;
   let lastFloor;

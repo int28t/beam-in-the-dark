@@ -1,6 +1,6 @@
 import { createFrameMeter } from '../frame-meter.js';
 import { test, assert, near } from './harness.js';
-import { createInputState, createInput } from '../input.js';
+import { createInputState, createInput, bindActionButton } from '../input.js';
 import { createPlatform } from '../platform.js';
 import { getQualityProfile, applyQuality } from '../quality.js';
 import { loadProgress, saveProgress } from '../storage.js';
@@ -285,4 +285,39 @@ test('FPS: измеряется реальный интервал кадров, 
   meter.reset();
   assert(meter.sample(100000) === null);
   assert(meter.sample(100100) === null);
+});
+
+test('Кнопка фонаря: касание срабатывает сразу, совместимый click не переключает дважды', () => {
+  const button = new EventTarget();
+  button.disabled = false;
+  const abort = new AbortController();
+  let presses = 0;
+  bindActionButton(button, () => presses++, { signal: abort.signal });
+  function fire(type, time, detail = 0, pointerType = 'touch') {
+    const event = new Event(type, { cancelable: true });
+    Object.defineProperties(event, {
+      timeStamp: { value: time },
+      detail: { value: detail },
+      pointerType: { value: pointerType },
+    });
+    button.dispatchEvent(event);
+  }
+  fire('pointerdown', 1000);
+  assert(presses === 1);
+  fire('click', 1050, 1);
+  assert(presses === 1);
+  fire('click', 1100, 0, '');
+  assert(presses === 2);
+  fire('pointerdown', 2000);
+  assert(presses === 3);
+  fire('pointerup', 5000);
+  fire('click', 5050, 1);
+  assert(presses === 3);
+  button.disabled = true;
+  fire('pointerdown', 5200);
+  assert(presses === 3);
+  abort.abort();
+  button.disabled = false;
+  fire('click', 7000, 1, 'mouse');
+  assert(presses === 3);
 });

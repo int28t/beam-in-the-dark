@@ -229,3 +229,37 @@ export function createInput(
     },
   };
 }
+
+export function bindActionButton(button, action, { signal } = {}) {
+  let lastTouch = -Infinity;
+  button.addEventListener(
+    'pointerdown',
+    (event) => {
+      if (button.disabled || !['touch', 'pen'].includes(event.pointerType)) return;
+      lastTouch = event.timeStamp;
+      event.preventDefault();
+      action();
+    },
+    { signal },
+  );
+  button.addEventListener(
+    'pointerup',
+    (event) => {
+      if (['touch', 'pen'].includes(event.pointerType)) {
+        lastTouch = event.timeStamp;
+        event.preventDefault();
+      }
+    },
+    { signal },
+  );
+  button.addEventListener(
+    'click',
+    (event) => {
+      if (button.disabled) return;
+      if (event.detail > 0 && event.timeStamp >= lastTouch && event.timeStamp - lastTouch < 800)
+        return;
+      action();
+    },
+    { signal },
+  );
+}

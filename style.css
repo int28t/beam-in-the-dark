@@ -116,3 +116,13 @@ kbd { font: inherit; color: #e6dfca; }
   .is-touch .danger { top: calc(var(--safe-top) + 60px); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+/* In short landscape windows, keep the action button between the thumbs,
+   away from the top-right Telegram controls and the pause button. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .is-touch[data-aim-mode="dual"] .flashlight-control {
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--safe-bottom) + 24px);
+    transform: translateX(-50%);
+  }
+}
