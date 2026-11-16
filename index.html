@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10171a">
+  <meta name="description" content="Найдите ключ и выход из тёмного замка. Атмосферная 3D-игра в браузере.">
+  <title>Beam in the Dark</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","nipplejs":"https://cdn.jsdelivr.net/npm/nipplejs@1.0.4/dist/index.mjs"}}
+  </script>
+</head>
+<body>
+  <main id="app" aria-label="Beam in the Dark">
+    <div id="scene" aria-label="Игровой мир"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <header class="hud">
+      <div class="identity"><span class="sigil" aria-hidden="true">✦</span><div>Beam in the Dark<small id="version">Версия 0.1.0</small></div></div>
+      <div class="hud-actions"><div class="floor-count"><small>Этаж</small><span id="floor-number">01</span></div><button id="pause" class="icon-button" aria-label="Пауза" hidden>Ⅱ</button></div>
+    </header>
+    <div class="objective" id="objective" role="status">Свет покажет дорогу</div>
+    <div id="overlay" class="overlay">
+      <section class="panel" aria-labelledby="panel-title">
+        <div class="ornament" aria-hidden="true">◇</div>
+        <p class="chapter" id="panel-caption">За порогом света</p>
+        <h1 id="panel-title">Beam in<br>the Dark</h1>
+        <p id="panel-description">Подготавливаем свет и тени…</p>
+        <div id="panel-actions" class="panel-actions"></div>
+        <p class="panel-footnote" id="panel-note">Тёмный замок. Один луч света.</p>
+      </section>
+    </div>
+    <div class="touch-controls" id="touch-controls" hidden><div id="joystick" aria-label="Джойстик движения"></div><span>Двигайтесь к свету</span></div>
+    <footer class="controls-hint" id="controls-hint">Найдите дорогу сквозь темноту</footer>
+    <p id="announcement" class="sr-only" aria-live="polite"></p>
+    <section id="fatal-error" class="error-panel" role="alert" hidden><h1>Не удалось зажечь свет</h1><p id="error-message"></p><button onclick="location.reload()">Попробовать снова</button></section>
+    <noscript><div class="error-panel">Для игры включите JavaScript в браузере.</div></noscript>
+  </main>
+  <script type="module">
+    let started = false;
+    function showError(message) {
+      document.querySelector('#error-message').textContent = message;
+      document.querySelector('#fatal-error').hidden = false;
+    }
+    const timeout = setTimeout(() => {
+      if (!started) showError('Загрузка затянулась. Проверьте соединение и доступ к cdn.jsdelivr.net, затем обновите страницу.');
+    }, 20000);
+    import('./main.js').then(({ start }) => {
+      start();
+      started = true;
+      clearTimeout(timeout);
+      document.querySelector('#fatal-error').hidden = true;
+    }).catch(error => {
+      clearTimeout(timeout);
+      console.error(error);
+      showError('Проверьте доступ к интернету и поддержку WebGL 2. Откройте игру в современном браузере через HTTP или HTTPS.');
+    });
+  </script>
+</body>
+</html>
